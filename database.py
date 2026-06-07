@@ -1,9 +1,15 @@
 from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import sessionmaker
 
-DATABASE_URL = "postgresql://postgres:@localhost:5432/taskdb"
+DATABASE_URL = "postgresql://postgres:2048@localhost:5432/taskdb"
 
 engine = create_engine(DATABASE_URL)
 
-connection = engine.connect()
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 
-print("Connected to PostgreSQL successfully!")
+Base = declarative_base()

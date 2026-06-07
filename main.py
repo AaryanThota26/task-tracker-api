@@ -1,5 +1,18 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from database import SessionLocal
+from models import TaskDB
+
+from sqlalchemy.orm import Session
+from fastapi import Depends
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 
 app = FastAPI()
 
@@ -72,3 +85,11 @@ def update_task(task_id: int, updated_task: Task):
             }
 
     return {"message": "Task not found"}
+
+
+@app.get("/dbtasks")
+def get_db_tasks(db: Session = Depends(get_db)):
+
+    tasks = db.query(TaskDB).all()
+
+    return tasks
