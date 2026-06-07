@@ -16,10 +16,6 @@ def get_db():
 
 app = FastAPI()
 
-tasks = [
-    {"id": 1, "task": "Learn FastAPI"},
-    {"id": 2, "task": "Learn Docker"}
-]
 
 class Task(BaseModel):
     task: str
@@ -29,67 +25,71 @@ def home():
     return {"message": "Task Tracker API"}
 
 @app.get("/tasks")
-def get_tasks():
+def get_tasks(db: Session = Depends(get_db)):
+
+    tasks = db.query(TaskDB).all()
+
     return tasks
 
-next_id = 3
-
 @app.post("/tasks")
-def create_task(task: Task):
-    global next_id
+def create_task(task: Task, db: Session = Depends(get_db)):
 
-    new_task = {
-        "id": next_id,
-        "task": task.task
-    }
+    new_task = TaskDB(task=task.task)
 
-    tasks.append(new_task)
-    next_id += 1
+    db.add(new_task)
+    db.commit()
+    db.refresh(new_task)
 
     return new_task
 
 # get the task by id 
 @app.get("/tasks/{task_id}")
-def get_task(task_id: int):
+def get_task(task_id: int, db: Session = Depends(get_db)):
 
-    for task in tasks:
-        if task["id"] == task_id:
-            return task
+    task = db.query(TaskDB).filter(TaskDB.id == task_id).first()
+
+    if task:
+        return task
 
     return {"message": "Task not found"}
 
+
+#  To delete a task
 
 @app.delete("/tasks/{task_id}")
-def delete_task(task_id: int):
+def delete_task(task_id: int, db: Session = Depends(get_db)):
 
-    for task in tasks:
-        if task["id"] == task_id:
-            tasks.remove(task)
-            return {"message": "Task deleted"}
+    task = db.query(TaskDB).filter(TaskDB.id == task_id).first()
 
-    return {"message": "Task not found"}
+    if not task:
+        return {"message": "Task not found"}
+
+    db.delete(task)
+    db.commit()
+
+    return {"message": "Task deleted"}
 
 
 # to updated the tasks
 
 @app.put("/tasks/{task_id}")
-def update_task(task_id: int, updated_task: Task):
+def update_task(
+    task_id: int,
+    updated_task: Task,
+    db: Session = Depends(get_db)
+):
 
-    for task in tasks:
-        if task["id"] == task_id:
-            task["task"] = updated_task.task
+    task = db.query(TaskDB).filter(TaskDB.id == task_id).first()
 
-            return {
-                "message": "Task updated",
-                "task": task
-            }
+    if not task:
+        return {"message": "Task not found"}
 
-    return {"message": "Task not found"}
+    task.task = updated_task.task
 
+    db.commit()
+    db.refresh(task)
 
-@app.get("/dbtasks")
-def get_db_tasks(db: Session = Depends(get_db)):
-
-    tasks = db.query(TaskDB).all()
-
-    return tasks
+    return {
+        "message": "Task updated",
+        "task": task
+    }
