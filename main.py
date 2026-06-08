@@ -6,6 +6,10 @@ from models import TaskDB
 from sqlalchemy.orm import Session
 from fastapi import Depends
 
+
+from redis_config import redis_client
+import json
+
 def get_db():
     db = SessionLocal()
     try:
@@ -24,9 +28,28 @@ def home():
 @app.get("/tasks")
 def get_tasks(db: Session = Depends(get_db)):
 
+    cached_tasks = redis_client.get("all_tasks")
+
+    if cached_tasks:
+        return json.loads(cached_tasks)
+
     tasks = db.query(TaskDB).all()
 
-    return tasks
+    tasks_data = [
+        {
+            "id": task.id,
+            "task": task.task
+        }
+        for task in tasks
+    ]
+
+    redis_client.setex(
+        "all_tasks",
+        300,
+        json.dumps(tasks_data)
+    )
+
+    return tasks_data
 
 @app.post("/tasks")
 def create_task(task: TaskCreate, db: Session = Depends(get_db)):
@@ -36,6 +59,7 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
+    redis_client.delete("all_tasks")
 
     return new_task
 
@@ -43,12 +67,28 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
 @app.get("/tasks/{task_id}")
 def get_task(task_id: int, db: Session = Depends(get_db)):
 
+    cached_task = redis_client.get(f"task_{task_id}")
+
+    if cached_task:
+        return json.loads(cached_task)
+
     task = db.query(TaskDB).filter(TaskDB.id == task_id).first()
 
-    if task:
-        return task
+    if not task:
+        return {"message": "Task not found"}
 
-    return {"message": "Task not found"}
+    task_data = {
+        "id": task.id,
+        "task": task.task
+    }
+
+    redis_client.setex(
+        f"task_{task_id}",
+        300,
+        json.dumps(task_data)
+    )
+
+    return task_data
 
 
 #  To delete a task
@@ -63,6 +103,9 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
 
     db.delete(task)
     db.commit()
+
+    redis_client.delete("all_tasks")
+    redis_client.delete(f"task_{task_id}")
 
     return {"message": "Task deleted"}
 
@@ -85,6 +128,9 @@ def update_task(
 
     db.commit()
     db.refresh(task)
+
+    redis_client.delete("all_tasks")
+    redis_client.delete(f"task_{task_id}")
 
     return {
         "message": "Task updated",
