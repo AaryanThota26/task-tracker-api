@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from schemas import TaskCreate
-from database import SessionLocal
+from database import SessionLocal, Base, engine
 from models import TaskDB
 
 from sqlalchemy.orm import Session
@@ -17,7 +17,7 @@ def get_db():
     finally:
         db.close()
 
-
+Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
 
