@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from schemas import TaskCreate
 from database import SessionLocal
 from models import TaskDB
 
@@ -17,9 +17,6 @@ def get_db():
 app = FastAPI()
 
 
-class Task(BaseModel):
-    task: str
-
 @app.get("/")
 def home():
     return {"message": "Task Tracker API"}
@@ -32,7 +29,7 @@ def get_tasks(db: Session = Depends(get_db)):
     return tasks
 
 @app.post("/tasks")
-def create_task(task: Task, db: Session = Depends(get_db)):
+def create_task(task: TaskCreate, db: Session = Depends(get_db)):
 
     new_task = TaskDB(task=task.task)
 
@@ -75,7 +72,7 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
 @app.put("/tasks/{task_id}")
 def update_task(
     task_id: int,
-    updated_task: Task,
+    updated_task: TaskCreate,
     db: Session = Depends(get_db)
 ):
 
