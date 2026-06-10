@@ -6,6 +6,8 @@ from models import TaskDB
 from sqlalchemy.orm import Session
 from fastapi import Depends
 
+from fastapi.middleware.cors import CORSMiddleware
+
 
 from redis_config import redis_client
 import json
@@ -20,6 +22,13 @@ def get_db():
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def home():

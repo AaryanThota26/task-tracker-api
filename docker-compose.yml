@@ -39,5 +39,18 @@ services:
       - redis
 
 
+  frontend:
+    build:
+      context: ./frontend
+
+    container_name: task-frontend
+
+    ports:
+      - "5173:5173"
+
+    depends_on:
+      - app
+
+
 volumes:
   postgres_data:
