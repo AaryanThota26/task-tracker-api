@@ -8,7 +8,7 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
 <GoogleOAuthProvider
-  clientId="556249165856-7l0pdbgcaiv5va14j9ma9oemd2r896mf.apps.googleusercontent.com"
+  clientId="949066638142-7pg124lpk4921ljjikbvra39i86ff4ln.apps.googleusercontent.com"
 >
     <>
       <Toaster position="top-right" />
