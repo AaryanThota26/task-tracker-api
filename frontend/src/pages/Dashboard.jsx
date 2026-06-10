@@ -9,11 +9,12 @@ function Dashboard() {
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
   const [searchTerm, setSearchTerm] = useState(""); 
-  const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
-
-  const user = JSON.parse(localStorage.getItem("user"));
+  const user = JSON.parse(
+    localStorage.getItem("user") || "null"
+  );
+  
 
   if (!user) {
      return <Navigate to="/" />;
@@ -26,15 +27,19 @@ function Dashboard() {
 
   const fetchTasks = async () => {
     try {
-      const response = await api.get("/tasks");
+      const response = await api.get(
+      `/tasks?user_email=${user.email}`
+      );
       setTasks(response.data);
     } catch (error) {
       console.error(error);
     }
   };
   useEffect(() => {
-    fetchTasks();
-  }, []);
+    if (user?.email) {
+      fetchTasks();
+    }
+  }, [user?.email]);
 
 
 
@@ -43,24 +48,28 @@ function Dashboard() {
 
     try {
       await api.post("/tasks", {
-        task: newTask,
+      task: newTask,
+      user_email: user.email,
       });
 
       toast.success("Task created");
 
       setNewTask("");
-      fetchTasks();
+      await fetchTasks();
     } catch (error) {
       console.error(error);
       toast.error("Failed to create task");
 
     }
   };
+
   const deleteTask = async (id) => {
   try {
-    await api.delete(`/tasks/${id}`);
+    await api.delete(
+    `/tasks/${id}?user_email=${user.email}`
+    );
     toast.success("Task deleted");
-    fetchTasks();
+    await fetchTasks();
   } catch (error) {
     console.error(error);
     toast.error("Failed to delete task");
@@ -71,13 +80,14 @@ function Dashboard() {
   try {
     await api.put(`/tasks/${id}`, {
       task: editText,
+      user_email: user.email,
     });
 
     toast.success("Task updated");
 
     setEditingId(null);
     setEditText("");
-    fetchTasks();
+    await fetchTasks();
   } catch (error) {
     console.error(error);
     toast.error("Failed to update task");

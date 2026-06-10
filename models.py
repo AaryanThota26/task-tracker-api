@@ -8,3 +8,4 @@ class TaskDB(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     task = Column(String)
+    user_email = Column(String, index=True)

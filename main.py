@@ -35,25 +35,33 @@ def home():
     return {"message": "Task Tracker API"}
 
 @app.get("/tasks")
-def get_tasks(db: Session = Depends(get_db)):
+def get_tasks(
+    user_email: str,
+    db: Session = Depends(get_db)
+):
 
-    cached_tasks = redis_client.get("all_tasks")
+    cached_tasks = redis_client.get(
+       f"tasks_{user_email}"
+    )
 
     if cached_tasks:
         return json.loads(cached_tasks)
 
-    tasks = db.query(TaskDB).all()
+    tasks = db.query(TaskDB).filter(
+       TaskDB.user_email == user_email
+    ).all()
 
     tasks_data = [
         {
             "id": task.id,
-            "task": task.task
+            "task": task.task,
+            "user_email": task.user_email
         }
         for task in tasks
     ]
 
     redis_client.setex(
-        "all_tasks",
+        f"tasks_{user_email}",
         300,
         json.dumps(tasks_data)
     )
@@ -63,36 +71,48 @@ def get_tasks(db: Session = Depends(get_db)):
 @app.post("/tasks")
 def create_task(task: TaskCreate, db: Session = Depends(get_db)):
 
-    new_task = TaskDB(task=task.task)
+    new_task = TaskDB(
+       task=task.task,
+       user_email=task.user_email
+    )
 
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
-    redis_client.delete("all_tasks")
+    redis_client.delete(
+       f"tasks_{task.user_email}"
+    )
 
     return new_task
 
 # get the task by id 
 @app.get("/tasks/{task_id}")
-def get_task(task_id: int, db: Session = Depends(get_db)):
-
-    cached_task = redis_client.get(f"task_{task_id}")
+def get_task(
+    task_id: int,
+    user_email: str,
+    db: Session = Depends(get_db)
+):
+    cached_task = redis_client.get(f"task_{task_id}_{user_email}")
 
     if cached_task:
         return json.loads(cached_task)
 
-    task = db.query(TaskDB).filter(TaskDB.id == task_id).first()
+    task = db.query(TaskDB).filter(
+       TaskDB.id == task_id,
+       TaskDB.user_email == user_email
+    ).first()
 
     if not task:
         return {"message": "Task not found"}
 
     task_data = {
         "id": task.id,
-        "task": task.task
+        "task": task.task,
+        "user_email": task.user_email
     }
 
     redis_client.setex(
-        f"task_{task_id}",
+        f"task_{task_id}_{user_email}",
         300,
         json.dumps(task_data)
     )
@@ -103,9 +123,16 @@ def get_task(task_id: int, db: Session = Depends(get_db)):
 #  To delete a task
 
 @app.delete("/tasks/{task_id}")
-def delete_task(task_id: int, db: Session = Depends(get_db)):
+def delete_task(
+    task_id: int,
+    user_email: str,
+    db: Session = Depends(get_db)
+):
 
-    task = db.query(TaskDB).filter(TaskDB.id == task_id).first()
+    task = db.query(TaskDB).filter(
+        TaskDB.id == task_id,
+        TaskDB.user_email == user_email
+    ).first()
 
     if not task:
         return {"message": "Task not found"}
@@ -113,8 +140,10 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db.delete(task)
     db.commit()
 
-    redis_client.delete("all_tasks")
-    redis_client.delete(f"task_{task_id}")
+    redis_client.delete(
+       f"task_{task_id}_{user_email}"
+    )
+    redis_client.delete(f"task_{task_id}_{user_email}")
 
     return {"message": "Task deleted"}
 
@@ -128,7 +157,10 @@ def update_task(
     db: Session = Depends(get_db)
 ):
 
-    task = db.query(TaskDB).filter(TaskDB.id == task_id).first()
+    task = db.query(TaskDB).filter(
+       TaskDB.id == task_id,
+       TaskDB.user_email == updated_task.user_email
+    ).first()
 
     if not task:
         return {"message": "Task not found"}
@@ -138,8 +170,10 @@ def update_task(
     db.commit()
     db.refresh(task)
 
-    redis_client.delete("all_tasks")
-    redis_client.delete(f"task_{task_id}")
+    redis_client.delete(
+       f"tasks_{updated_task.user_email}"
+    )
+    redis_client.delete(f"task_{task_id}_{updated_task.user_email}")
 
     return {
         "message": "Task updated",
