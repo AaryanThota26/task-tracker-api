@@ -63,17 +63,22 @@ function Dashboard() {
     }
   };
 
-  const deleteTask = async (id) => {
+const deleteTask = async (id) => {
   try {
-    await api.delete(
-    `/tasks/${id}?user_email=${user.email}`
+    const response = await api.delete(
+      `/tasks/${id}?user_email=${user.email}`
     );
-    toast.success("Task deleted");
+
+    if (response.data.message === "Task deleted") {
+      toast.success("Task deleted");
+    } else {
+      toast.error(response.data.message);
+    }
+
     await fetchTasks();
   } catch (error) {
     console.error(error);
     toast.error("Failed to delete task");
-
   }
 };
   const updateTask = async (id) => {
@@ -94,7 +99,7 @@ function Dashboard() {
   }
 };
 const filteredTasks = tasks.filter((task) =>
-  task.task.toLowerCase().includes(searchTerm.toLowerCase())
+  task?.task?.toLowerCase().includes(searchTerm.toLowerCase())
   
 );
   return (

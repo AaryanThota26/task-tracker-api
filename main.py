@@ -143,7 +143,10 @@ def delete_task(
     redis_client.delete(
        f"task_{task_id}_{user_email}"
     )
-    redis_client.delete(f"task_{task_id}_{user_email}")
+
+    redis_client.delete(
+       f"tasks_{user_email}"
+    )
 
     return {"message": "Task deleted"}
 

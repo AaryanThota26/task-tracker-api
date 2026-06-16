@@ -46,7 +46,7 @@ services:
     container_name: task-frontend
 
     ports:
-      - "5173:5173"
+      - "5173:3000"
 
     depends_on:
       - app
