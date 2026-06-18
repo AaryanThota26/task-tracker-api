@@ -9,3 +9,25 @@ frontend/dist/
 .vscode/
 
 *.pyc
+
+
+
+__pycache__/
+venv/
+.env
+
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+.vscode/
+
+*.pyc
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform.tfstate
+terraform.tfstate.backup
+*.tfplan
