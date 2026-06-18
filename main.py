@@ -7,7 +7,9 @@ from sqlalchemy.orm import Session
 from fastapi import Depends
 
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter
 
+router = APIRouter(prefix="/api")
 
 from redis_config import redis_client
 import json
@@ -21,10 +23,9 @@ def get_db():
 
 Base.metadata.create_all(bind=engine)
 app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173","https://taskmonitor.org","https://www.taskmonitor.org"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -34,7 +35,7 @@ app.add_middleware(
 def home():
     return {"message": "Task Tracker API"}
 
-@app.get("/tasks")
+@router.get("/tasks")
 def get_tasks(
     user_email: str,
     db: Session = Depends(get_db)
@@ -68,7 +69,7 @@ def get_tasks(
 
     return tasks_data
 
-@app.post("/tasks")
+@router.post("/tasks")
 def create_task(task: TaskCreate, db: Session = Depends(get_db)):
 
     new_task = TaskDB(
@@ -86,7 +87,7 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     return new_task
 
 # get the task by id 
-@app.get("/tasks/{task_id}")
+@router.get("/tasks/{task_id}")
 def get_task(
     task_id: int,
     user_email: str,
@@ -122,7 +123,7 @@ def get_task(
 
 #  To delete a task
 
-@app.delete("/tasks/{task_id}")
+@router.delete("/tasks/{task_id}")
 def delete_task(
     task_id: int,
     user_email: str,
@@ -153,7 +154,7 @@ def delete_task(
 
 # to updated the tasks
 
-@app.put("/tasks/{task_id}")
+@router.put("/tasks/{task_id}")
 def update_task(
     task_id: int,
     updated_task: TaskCreate,
@@ -182,3 +183,4 @@ def update_task(
         "message": "Task updated",
         "task": task
     }
+app.include_router(router)
