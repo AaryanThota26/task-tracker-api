@@ -1,63 +1,122 @@
-# Task Tracker API
+# Task Tracker - Cloud Native Application on GCP
 
 ## Overview
 
-Task Tracker API is a cloud-native application built with FastAPI that allows users to create, read, update, and delete tasks.
+Task Tracker is a cloud-native task management application built using FastAPI, React, PostgreSQL, and Redis.
 
-The application uses PostgreSQL for persistent storage, Redis for caching, Docker for containerization, Docker Compose for local development, and Kubernetes (GKE) for cloud deployment on Google Cloud Platform.
+The project demonstrates a complete end-to-end deployment workflow on Google Cloud Platform (GCP), including containerization with Docker, infrastructure provisioning using Terraform, orchestration using Google Kubernetes Engine (GKE), HTTPS-secured public access through Kubernetes Ingress, and persistent data storage using PostgreSQL.
+
+The application allows users to authenticate using Google OAuth and perform CRUD operations on tasks through a responsive web interface.
 
 ---
 
-## Tech Stack
-
-### Backend
-- FastAPI
-- SQLAlchemy
-- PostgreSQL
-- Redis
+# Live Application
 
 ### Frontend
-- React
-- Vite
-- Axios
-- Google OAuth
 
-### DevOps & Cloud
-- Docker
-- Docker Compose
-- Kubernetes (GKE)
-- Artifact Registry
-- Google Cloud Platform (GCP)
+https://taskmonitor.org
+
+### Backend API
+
+https://taskmonitor.org/api
 
 ---
 
-## Features
+# Architecture
 
-### Backend
-- Create Tasks
-- Get All Tasks
-- Get Task By ID
-- Update Tasks
-- Delete Tasks
-- PostgreSQL Integration
-- Redis Caching
-
-### Frontend
-- User Login Screen
-- Task Dashboard
-- API Integration using Axios
-- Responsive UI
-
-### Cloud Features
-- Dockerized Services
-- Kubernetes Deployment
-- ConfigMaps and Secrets
-- Public LoadBalancer Access
+```text
+User
+  │
+  ▼
+HTTPS (taskmonitor.org)
+  │
+  ▼
+GKE Ingress + Managed SSL Certificate
+  │
+  ├──────────────► Frontend Service (React)
+  │
+  └──────────────► Backend Service (FastAPI)
+                              │
+                              ▼
+                        PostgreSQL
+                              │
+                              ▼
+                            Redis
+```
 
 ---
 
-## Project Structure
+# Tech Stack
 
+## Frontend
+
+* React
+* Vite
+* Axios
+* Google OAuth
+
+## Backend
+
+* FastAPI
+* SQLAlchemy
+* PostgreSQL
+* Redis
+
+## DevOps & Cloud
+
+* Docker
+* Docker Compose
+* Kubernetes
+* Google Kubernetes Engine (GKE)
+* Terraform
+* Google Cloud Platform (GCP)
+* Artifact Registry
+* Managed SSL Certificates
+* Kubernetes Ingress
+
+---
+
+# Features
+
+## Authentication
+
+* Google OAuth Login
+* User-specific task management
+
+## Task Management
+
+* Create Tasks
+* View Tasks
+* Update Tasks
+* Delete Tasks
+* Search Tasks
+
+## Database
+
+* PostgreSQL persistent storage
+* SQLAlchemy ORM integration
+
+## Caching
+
+* Redis caching layer
+* Improved task retrieval performance
+* Automatic cache invalidation on updates
+
+## Cloud Features
+
+* Dockerized application
+* Kubernetes deployments
+* ConfigMaps and Secrets
+* HTTPS secured endpoint
+* Custom domain integration
+* GKE Ingress routing
+* Infrastructure as Code using Terraform
+
+---
+
+# Project Structure
+
+```text
 task-tracker/
 │
 ├── frontend/
@@ -77,22 +136,32 @@ task-tracker/
 │   ├── postgres-service.yaml
 │   ├── redis-deployment.yaml
 │   ├── redis-service.yaml
+│   ├── ingress.yaml
+│   ├── managed-cert.yaml
 │   ├── configmap.yaml
 │   └── secret.yaml
 │
+├── terraform/
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── outputs.tf
+│   └── provider.tf
+│
+├── Dockerfile
+├── docker-compose.yml
 ├── main.py
 ├── database.py
 ├── models.py
 ├── schemas.py
 ├── redis_config.py
-├── Dockerfile
-├── docker-compose.yml
+├── requirements.txt
 ├── .env.example
 └── README.md
+```
 
 ---
 
-## Environment Variables
+# Environment Variables
 
 Example `.env.example`
 
@@ -105,120 +174,192 @@ DB_PASSWORD=your_password
 
 REDIS_HOST=redis
 REDIS_PORT=6379
-```
 
-
-
-## API Endpoints
-
-### Get All Tasks
-
-```http
-GET /tasks
-```
-
-### Get Task By ID
-
-```http
-GET /tasks/{task_id}
-```
-
-### Create Task
-
-```http
-POST /tasks
-```
-
-### Update Task
-
-```http
-PUT /tasks/{task_id}
-```
-
-### Delete Task
-
-```http
-DELETE /tasks/{task_id}
+VITE_API_URL=https://taskmonitor.org/api
 ```
 
 ---
 
-## Run Locally
+# API Endpoints
 
-### 1. Clone Repository
+## Get All Tasks
+
+```http
+GET /api/tasks
+```
+
+## Get Task By ID
+
+```http
+GET /api/tasks/{task_id}
+```
+
+## Create Task
+
+```http
+POST /api/tasks
+```
+
+## Update Task
+
+```http
+PUT /api/tasks/{task_id}
+```
+
+## Delete Task
+
+```http
+DELETE /api/tasks/{task_id}
+```
+
+---
+
+# Run Locally
+
+## Clone Repository
 
 ```bash
 git clone <repository-url>
 cd task-tracker
 ```
 
-### 2. Create Environment File
+## Create Environment File
 
 ```bash
 cp .env.example .env
 ```
 
-### 3. Start Containers
+## Start Containers
 
 ```bash
 docker compose up -d
 ```
 
-### 4. Access Swagger Documentation
+## Backend
+
+```text
+http://localhost:8000
+```
+
+## Swagger Documentation
 
 ```text
 http://localhost:8000/docs
 ```
 
----
+## Frontend
 
-## Stop Services
-
-```bash
-docker compose down
+```text
+http://localhost:5173
 ```
 
 ---
 
-## GCP Deployment
+# Docker
 
-Application deployed on Google Kubernetes Engine (GKE).
+Build Backend
 
-### Components
+```bash
+docker build -t task-api .
+```
 
-* FastAPI Backend
-* PostgreSQL
-* Redis
-* Kubernetes Deployments
-* Kubernetes Services
-* ConfigMaps
-* Secrets
+Build Frontend
+
+```bash
+docker build -t task-frontend ./frontend
+```
+
+---
+
+# Kubernetes Deployment
+
+Deploy Resources
+
+```bash
+kubectl apply -f k8s/
+```
+
+Verify Deployments
+
+```bash
+kubectl get pods
+kubectl get svc
+kubectl get ingress
+```
+
+---
+
+# Terraform Deployment
+
+Initialize Terraform
+
+```bash
+terraform init
+```
+
+Plan Infrastructure
+
+```bash
+terraform plan
+```
+
+Apply Infrastructure
+
+```bash
+terraform apply
+```
+
+Verify State
+
+```bash
+terraform state list
+```
+
+---
+
+# Deployment Validation
+
+Infrastructure successfully managed by Terraform:
+
+```text
+No changes. Your infrastructure matches the configuration.
+
+Apply complete!
+Resources: 0 added, 0 changed, 0 destroyed.
+```
+
+---
+
+# GCP Resources Used
+
+* Google Kubernetes Engine (GKE)
 * Artifact Registry
+* Managed SSL Certificates
+* Load Balancer
+* Kubernetes Ingress
+* Cloud DNS
+* Compute Engine (GKE Nodes)
 
 ---
 
-## Public Endpoints
+# Screenshots
 
-### Backend Swagger
+Included in the screenshots folder:
 
-http://34.173.172.212:8000/docs
-
-### Frontend
-
-http://34.46.70.183
-
----
-
-## Screenshots Included
-
-* GKE Cluster Running
+* Terraform Apply Success
+* GKE Cluster
+* Kubernetes Pods
+* Kubernetes Services
+* Kubernetes Ingress
 * Artifact Registry Images
-* FastAPI Swagger UI
-* Successful POST /tasks
-* Successful GET /tasks
+* Task Dashboard
+* HTTPS Endpoint
+* Successful CRUD Operations
 
 ---
 
-## Author
+# Author
 
-Aaryan Thota
+**Aaryan Thota**
+
+Cloud Native Application Deployment on Google Cloud Platform using FastAPI, React, Kubernetes, Terraform, PostgreSQL, and Redis.
