@@ -1,10 +1,10 @@
-# Task Tracker - Cloud Native Application on GCP
+# Task Tracker - Cloud Native Application on Google Cloud Platform (GCP)
 
 ## Overview
 
 Task Tracker is a cloud-native task management application built using FastAPI, React, PostgreSQL, and Redis.
 
-The project demonstrates a complete end-to-end deployment workflow on Google Cloud Platform (GCP), including containerization with Docker, infrastructure provisioning using Terraform, orchestration using Google Kubernetes Engine (GKE), HTTPS-secured public access through Kubernetes Ingress, and persistent data storage using PostgreSQL.
+The project demonstrates an end-to-end cloud-native deployment workflow on Google Cloud Platform (GCP), including containerization with Docker, infrastructure provisioning using Terraform, orchestration using Google Kubernetes Engine (GKE), HTTPS-secured public access through Kubernetes Ingress, and application deployment using Kubernetes.
 
 The application allows users to authenticate using Google OAuth and perform CRUD operations on tasks through a responsive web interface.
 
@@ -12,11 +12,11 @@ The application allows users to authenticate using Google OAuth and perform CRUD
 
 # Live Application
 
-### Frontend
+## Frontend
 
 https://taskmonitor.org
 
-### Backend API
+## API Documentation (Swagger)
 
 https://taskmonitor.org/docs
 
@@ -28,20 +28,30 @@ https://taskmonitor.org/docs
 User
   │
   ▼
-HTTPS (taskmonitor.org)
+https://taskmonitor.org
   │
   ▼
-GKE Ingress + Managed SSL Certificate
+DNS Resolution
   │
-  ├──────────────► Frontend Service (React)
+  ▼
+Google Cloud HTTP(S) Load Balancer
   │
-  └──────────────► Backend Service (FastAPI)
-                              │
-                              ▼
-                        PostgreSQL
-                              │
-                              ▼
-                            Redis
+  ▼
+GKE Ingress (GCE Ingress Controller)
+  │
+  ├──────────────► Frontend Service
+  │                    │
+  │                    ▼
+  │               React Pods
+  │
+  └──────────────► Backend Service
+                       │
+                       ▼
+                  FastAPI Pods
+                       │
+          ┌────────────┴────────────┐
+          ▼                         ▼
+     PostgreSQL                  Redis
 ```
 
 ---
@@ -93,7 +103,7 @@ GKE Ingress + Managed SSL Certificate
 
 ## Database
 
-* PostgreSQL persistent storage
+* PostgreSQL data storage
 * SQLAlchemy ORM integration
 
 ## Caching
@@ -106,10 +116,11 @@ GKE Ingress + Managed SSL Certificate
 
 * Dockerized application
 * Kubernetes deployments
-* ConfigMaps and Secrets
+* Kubernetes services
+* Kubernetes ingress routing
 * HTTPS secured endpoint
 * Custom domain integration
-* GKE Ingress routing
+* Managed SSL certificates
 * Infrastructure as Code using Terraform
 
 ---
@@ -257,13 +268,13 @@ http://localhost:5173
 
 # Docker
 
-Build Backend
+## Build Backend
 
 ```bash
 docker build -t task-api .
 ```
 
-Build Frontend
+## Build Frontend
 
 ```bash
 docker build -t task-frontend ./frontend
@@ -273,13 +284,13 @@ docker build -t task-frontend ./frontend
 
 # Kubernetes Deployment
 
-Deploy Resources
+## Deploy Resources
 
 ```bash
 kubectl apply -f k8s/
 ```
 
-Verify Deployments
+## Verify Deployments
 
 ```bash
 kubectl get pods
@@ -289,31 +300,71 @@ kubectl get ingress
 
 ---
 
+# Kubernetes Components
+
+The application is deployed using the following Kubernetes resources:
+
+### Deployments
+
+* Frontend Deployment
+* Backend Deployment
+* PostgreSQL Deployment
+* Redis Deployment
+
+### Services
+
+* Frontend Service
+* Backend Service
+* PostgreSQL Service
+* Redis Service
+
+### Ingress
+
+* GCE Ingress Controller
+* HTTPS Routing
+* Managed SSL Certificate
+
+---
+
 # Terraform Deployment
 
-Initialize Terraform
+## Initialize Terraform
 
 ```bash
 terraform init
 ```
 
-Plan Infrastructure
+## Plan Infrastructure
 
 ```bash
 terraform plan
 ```
 
-Apply Infrastructure
+## Apply Infrastructure
 
 ```bash
 terraform apply
 ```
 
-Verify State
+## Verify State
 
 ```bash
 terraform state list
 ```
+
+---
+
+# Infrastructure as Code (IaC)
+
+Terraform is used to provision and manage cloud infrastructure.
+
+### Benefits
+
+* Reproducible deployments
+* Version-controlled infrastructure
+* Automated provisioning
+* Reduced manual configuration
+* Consistent environments
 
 ---
 
@@ -330,16 +381,55 @@ Resources: 0 added, 0 changed, 0 destroyed.
 
 ---
 
+# Security
+
+* HTTPS enabled using GKE Managed Certificates
+* TLS encryption for secure communication
+* Kubernetes Secrets for sensitive configuration
+* Environment variables following 12-Factor App principles
+* Secure OAuth authentication using Google Login
+
+---
+
+# Scalability
+
+The application is deployed on Google Kubernetes Engine (GKE) with multiple frontend and backend replicas.
+
+### Current Deployment
+
+* Frontend: 2 Replicas
+* Backend: 2 Replicas
+* PostgreSQL: 1 Replica
+* Redis: 1 Replica
+
+Kubernetes enables horizontal scaling by increasing pod replicas as traffic grows.
+
+---
+
 # GCP Resources Used
 
 * Google Kubernetes Engine (GKE)
 * Artifact Registry
+* Google Cloud Load Balancer
 * Managed SSL Certificates
-* Load Balancer
 * Kubernetes Ingress
-* Cloud DNS
 * Compute Engine (GKE Nodes)
 
+---
+
+# Screenshots
+
+The repository includes screenshots demonstrating:
+
+* Terraform Deployment
+* GKE Cluster
+* Kubernetes Pods
+* Kubernetes Services
+* Kubernetes Ingress
+* HTTPS Access
+* Task Dashboard
+* Task Creation
+* CRUD Operations
 
 ---
 
