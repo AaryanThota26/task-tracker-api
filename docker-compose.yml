@@ -25,11 +25,13 @@ services:
 
 
   app:
-    build: .
+    build:
+      context: ./backend
+
     container_name: task-api
 
     env_file:
-      - .env
+      - ./backend/.env
 
     ports:
       - "8000:8000"
