@@ -18,7 +18,7 @@ https://taskmonitor.org
 
 ### Backend API
 
-https://taskmonitor.org/api
+https://taskmonitor.org/docs
 
 ---
 
