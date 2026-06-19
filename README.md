@@ -340,21 +340,6 @@ Resources: 0 added, 0 changed, 0 destroyed.
 * Cloud DNS
 * Compute Engine (GKE Nodes)
 
----
-
-# Screenshots
-
-Included in the screenshots folder:
-
-* Terraform Apply Success
-* GKE Cluster
-* Kubernetes Pods
-* Kubernetes Services
-* Kubernetes Ingress
-* Artifact Registry Images
-* Task Dashboard
-* HTTPS Endpoint
-* Successful CRUD Operations
 
 ---
 
