@@ -19,7 +19,9 @@ spec:
       containers:
       - name: frontend
 
-        image: us-central1-docker.pkg.dev/task-tracker-499005/task-tracker/task-frontend:v3
+        image: us-central1-docker.pkg.dev/task-tracker-499005/task-tracker/task-frontend:v10
+
+        imagePullPolicy: Always
 
         ports:
         - containerPort: 3000

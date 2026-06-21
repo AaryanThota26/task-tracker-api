@@ -45,8 +45,6 @@ function usePomodoro() {
 export default function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [newTaskName, setNewTaskName] = useState("");
-  const [newTaskDesc, setNewTaskDesc] = useState("");
-  const [newTaskPriority, setNewTaskPriority] = useState("medium");
   const [newTaskDate, setNewTaskDate] = useState("");
   const [newTaskTime, setNewTaskTime] = useState("");
   const { query } = useSearch();
@@ -98,16 +96,14 @@ export default function Dashboard() {
     try {
       await api.post("/tasks", {
         task: newTaskName,
-        description: newTaskDesc || null,
+        description: null,
         user_email: user.email,
-        priority: newTaskPriority,
+        priority: "medium",
         status: "pending",
         due_date: due,
       });
       toast.success("Task created");
       setNewTaskName("");
-      setNewTaskDesc("");
-      setNewTaskPriority("medium");
       setNewTaskDate("");
       setNewTaskTime("");
       fetchTasks();
@@ -201,8 +197,6 @@ export default function Dashboard() {
 
           {/* Right Column */}
           <section className="lg:col-span-4 space-y-6">
-            {/* Pomodoro Timer */}
-            <DashboardTimer />
             {/* Quick Add */}
             <div className="glass p-6 md:p-8 rounded-[2rem] space-y-5">
               <h3 className="text-headline-md text-on-surface font-bold flex items-center gap-2">
@@ -218,24 +212,6 @@ export default function Dashboard() {
                   onKeyDown={(e) => { if (e.key === "Enter") quickAdd(); }}
                   className="w-full bg-surface-container-lowest border border-white/10 rounded-xl px-4 py-3 text-body-md focus:border-primary outline-none transition-all"
                 />
-                <textarea
-                  placeholder="Description (optional)"
-                  value={newTaskDesc}
-                  onChange={(e) => setNewTaskDesc(e.target.value)}
-                  rows={2}
-                  className="w-full bg-surface-container-lowest border border-white/10 rounded-xl px-4 py-3 text-body-md focus:border-primary outline-none transition-all resize-none"
-                />
-                <div className="flex items-center gap-2">
-                  <select
-                    value={newTaskPriority}
-                    onChange={(e) => setNewTaskPriority(e.target.value)}
-                    className="flex-1 glass py-3 rounded-xl px-3 text-on-surface-variant text-body-sm focus:outline-none"
-                  >
-                    <option value="low">Low Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="high">High Priority</option>
-                  </select>
-                </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="date"
@@ -258,8 +234,8 @@ export default function Dashboard() {
                 </button>
               </div>
             </div>
-
-
+            {/* Pomodoro Timer */}
+            <DashboardTimer />
           </section>
         </div>
       </div>
