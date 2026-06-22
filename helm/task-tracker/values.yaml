@@ -11,7 +11,7 @@ backend:
   replicas: 2
   image:
     repository: us-central1-docker.pkg.dev/task-tracker-499005/task-tracker/task-api
-    tag: v3
+    tag: v5
     pullPolicy: Always
   resources:
     requests:
@@ -27,7 +27,7 @@ frontend:
   replicas: 2
   image:
     repository: us-central1-docker.pkg.dev/task-tracker-499005/task-tracker/task-frontend
-    tag: v10
+    tag: v13
     pullPolicy: Always
   resources:
     requests:

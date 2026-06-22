@@ -27,3 +27,6 @@ SessionLocal = sessionmaker(
 )
 
 Base = declarative_base()
+
+# Create tables if they don't exist (use Alembic in production)
+# NOTE: create_all is called in main.py AFTER models are imported

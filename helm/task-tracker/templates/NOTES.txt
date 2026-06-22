@@ -1,0 +1,12 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your Task Tracker application has been deployed.
+
+Backend API:
+  kubectl port-forward svc/{{ include "task-tracker.fullname" . }}-backend 8000:8000
+
+Frontend:
+  kubectl port-forward svc/{{ include "task-tracker.fullname" . }}-frontend 8080:80
+
+Get the Ingress external IP:
+  kubectl get ingress {{ include "task-tracker.fullname" . }}-ingress

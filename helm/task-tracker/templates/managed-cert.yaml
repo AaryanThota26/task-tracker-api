@@ -1,0 +1,13 @@
+{{- if .Values.managedCert.enabled }}
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: {{ include "task-tracker.fullname" . }}-cert
+  labels:
+    {{- include "task-tracker.labels" . | nindent 4 }}
+spec:
+  domains:
+  {{- range .Values.ingress.domains }}
+    - {{ . }}
+  {{- end }}
+{{- end }}

@@ -67,6 +67,7 @@ GKE Ingress (GCE Ingress Controller)
 
 ## Backend
 
+* Python
 * FastAPI
 * SQLAlchemy
 * PostgreSQL

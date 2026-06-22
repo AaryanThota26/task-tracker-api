@@ -54,9 +54,12 @@ export default function Dashboard() {
   const fetchTasks = async () => {
     try {
       const res = await api.get(`/tasks?user_email=${user.email}`);
-      setTasks(res.data);
+      const data = Array.isArray(res.data) ? res.data : [];
+      setTasks(data);
     } catch (e) {
       console.error(e);
+      toast.error("Failed to load tasks");
+      setTasks([]);
     }
   };
 
@@ -131,6 +134,17 @@ export default function Dashboard() {
     if (p === "medium") return "bg-amber-500";
     return "bg-emerald-500";
   };
+
+  const statusBadge = (s) => {
+    if (s === "done") return "bg-emerald-500/20 text-emerald-400";
+    if (s === "doing") return "bg-primary/20 text-primary";
+    if (s === "missed") return "bg-error/20 text-error";
+    return "bg-amber-500/20 text-amber-400";
+  };
+
+  const recent = [...filtered]
+    .sort((a, b) => b.id - a.id)
+    .slice(0, 6);
 
   return (
     <Layout title="Task Tracker" onTaskCreated={fetchTasks}>
@@ -238,6 +252,49 @@ export default function Dashboard() {
             <DashboardTimer />
           </section>
         </div>
+
+        {/* Recent Tasks */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-headline-md text-on-surface font-bold">Recent Tasks</h3>
+            <button onClick={() => navigate("/today")} className="text-primary text-label-md hover:underline">View All</button>
+          </div>
+          <div className="space-y-4">
+            {recent.length === 0 ? (
+              <div className="glass p-6 rounded-2xl text-center text-on-surface-variant">No tasks yet</div>
+            ) : (
+              recent.map((task) => (
+                <div key={task.id} className="glass glass-hover p-6 rounded-2xl flex items-center gap-6 group transition-all duration-300">
+                  <div className={`w-1 h-12 rounded-full ${priorityColor(task.priority)}`} />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-headline-md text-on-surface group-hover:text-primary transition-colors truncate">{task.task}</h4>
+                    <div className="flex items-center gap-4 mt-1 text-on-surface-variant text-body-sm flex-wrap">
+                      {task.due_date && (
+                        <span className="flex items-center gap-1">
+                          <span className="material-symbols-outlined text-sm">calendar_month</span>
+                          {new Date(task.due_date).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      )}
+                      <span className={`px-2 py-0.5 rounded-full text-label-sm font-semibold uppercase ${statusBadge(task.status)}`}>
+                        {task.status}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined text-sm">flag</span>
+                        {task.priority?.charAt(0).toUpperCase() + task.priority?.slice(1)} Priority
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate("/today")}
+                    className="p-2 rounded-full hover:bg-white/5 text-on-surface-variant shrink-0"
+                  >
+                    <span className="material-symbols-outlined">arrow_forward</span>
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
       </div>
     </Layout>
   );

@@ -1,0 +1,45 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "task-tracker.fullname" . }}-ingress
+  labels:
+    {{- include "task-tracker.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: "{{ .Values.ingress.class }}"
+    {{- if .Values.managedCert.enabled }}
+    networking.gke.io/managed-certificates: {{ include "task-tracker.fullname" . }}-cert
+    {{- end }}
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "task-tracker.fullname" . }}-backend
+            port:
+              number: {{ .Values.backend.service.port }}
+      - path: /docs
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "task-tracker.fullname" . }}-backend
+            port:
+              number: {{ .Values.backend.service.port }}
+      - path: /openapi.json
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "task-tracker.fullname" . }}-backend
+            port:
+              number: {{ .Values.backend.service.port }}
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ include "task-tracker.fullname" . }}-frontend
+            port:
+              number: {{ .Values.frontend.service.port }}
+{{- end }}

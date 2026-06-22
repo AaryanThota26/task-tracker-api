@@ -21,3 +21,6 @@ terraform.tfstate.backup
 # Terraform variables (may contain secrets)
 terraform.tfvars
 *.auto.tfvars
+
+.kimchi/
+deprecated/

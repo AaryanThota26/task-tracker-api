@@ -5,6 +5,7 @@ import "./index.css";
 import { Toaster } from "react-hot-toast";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import { NotificationProvider } from "./context/NotificationContext";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
 <GoogleOAuthProvider
@@ -12,7 +13,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 >
     <>
       <Toaster position="top-right" />
-      <App />
+      <NotificationProvider>
+        <App />
+      </NotificationProvider>
     </>
   </GoogleOAuthProvider>
 );
