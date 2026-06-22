@@ -19,7 +19,7 @@ spec:
       containers:
       - name: backend
 
-        image: us-central1-docker.pkg.dev/task-tracker-499005/task-tracker/task-api:v5
+        image: us-central1-docker.pkg.dev/task-tracker-499005/task-tracker/task-api:v6
 
         imagePullPolicy: Always
 
