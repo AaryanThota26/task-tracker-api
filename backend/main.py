@@ -10,6 +10,7 @@ import json
 import logging
 from typing import Optional
 from datetime import datetime
+from contextlib import asynccontextmanager
 
 logger = logging.getLogger(__name__)
 
@@ -20,9 +21,13 @@ def get_db():
     finally:
         db.close()
 
-Base.metadata.create_all(bind=engine)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Wait for DB to be reachable before creating tables
+    Base.metadata.create_all(bind=engine)
+    yield
 
-app = FastAPI()
+app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173","https://taskmonitor.org","https://www.taskmonitor.org"],
