@@ -92,7 +92,7 @@ export default function Today() {
 
   return (
     <Layout title="Today's Tasks" onTaskCreated={fetchTasks}>
-      <div className="flex-1 flex flex-col lg:flex-row p-4 md:p-gutter-desktop gap-card-gap overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row p-4 md:p-gutter-desktop gap-card-gap">
         {/* Left: Task List */}
         <section className="flex-[3] flex flex-col min-w-0">
           <div className="flex items-center justify-between mb-6">
@@ -108,8 +108,8 @@ export default function Today() {
               todayTasks.map((task) => {
                 const cfg = statusConfig[task.status] || statusConfig.pending;
                 return (
-                  <div key={task.id} className={`glass p-6 rounded-2xl flex items-center justify-between group hover:border-primary/30 transition-all ${task.status === "doing" ? "border-l-4 border-l-primary" : ""}`}>
-                    <div className="flex items-center gap-6">
+                  <div key={task.id} className={`glass p-4 sm:p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:border-primary/30 transition-all ${task.status === "doing" ? "border-l-4 border-l-primary" : ""}`}>
+                    <div className="flex items-center gap-4 sm:gap-6">
                       <div className={`w-10 h-10 rounded-full ${cfg.bg} border ${cfg.border} flex items-center justify-center ${cfg.color}`}>
                         <span className="material-symbols-outlined">{cfg.icon}</span>
                       </div>

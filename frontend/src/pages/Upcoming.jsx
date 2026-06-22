@@ -116,7 +116,7 @@ export default function Upcoming() {
                     <p className="text-on-surface-variant text-label-md">{group.d.toLocaleString("en", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}</p>
                   </div>
                 </div>
-                <div className="pl-0 md:pl-12 lg:pl-24 space-y-6">
+                <div className="pl-14 sm:pl-0 md:pl-12 lg:pl-24 space-y-6">
                   {group.items.map((task) => {
                     const cfg = statusConfig[task.status] || statusConfig.pending;
                     const start = new Date(task.due_date);
@@ -174,7 +174,7 @@ export default function Upcoming() {
             <div className="relative z-10">
               <h4 className="text-headline-lg font-bold mb-4">Capacity Overview</h4>
               <p className="text-on-surface-variant mb-8 max-w-md">Your upcoming schedule shows {totalUpcoming} tasks planned ahead.</p>
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <div className="bg-primary/20 p-4 rounded-2xl flex-1 text-center">
                   <p className="text-primary text-headline-md font-bold">{bookedPercent}%</p>
                   <p className="text-label-sm text-on-surface-variant uppercase">Booked</p>
