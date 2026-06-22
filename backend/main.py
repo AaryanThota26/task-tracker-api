@@ -9,7 +9,7 @@ from redis_config import redis_client
 import json
 import logging
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ def task_to_dict(task):
         "user_email": task.user_email,
         "status": task.status,
         "priority": task.priority,
-        "due_date": task.due_date.isoformat() if task.due_date else None,
+        "due_date": task.due_date.replace(tzinfo=timezone.utc).isoformat() if task.due_date else None,
     }
 
 @router.get("/tasks")
