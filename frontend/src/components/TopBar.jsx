@@ -71,7 +71,7 @@ export default function TopBar({ title, onMenuClick, isMobile, isTablet }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="bg-surface-container-high/50 border border-white/10 rounded-full pl-10 pr-4 py-2 text-body-sm w-44 md:w-64 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all duration-300"
+            className="bg-surface-container-high/50 border border-white/10 rounded-full pl-10 pr-4 py-2 text-body-sm w-32 sm:w-44 md:w-64 focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all duration-300"
             placeholder="Search tasks..."
           />
         </div>

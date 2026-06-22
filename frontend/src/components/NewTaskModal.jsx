@@ -38,7 +38,7 @@ export default function NewTaskModal({ onClose, onCreated }) {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="glass-card p-8 rounded-2xl w-full max-w-lg mx-4 animate-in" onClick={(e) => e.stopPropagation()}>
+      <div className="glass-card p-6 sm:p-8 rounded-2xl w-full max-w-lg mx-4 animate-in" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-headline-md font-bold text-on-surface">New Task</h3>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-white/5 text-on-surface-variant">

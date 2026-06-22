@@ -153,7 +153,7 @@ export default function Dashboard() {
         <section className="glass rounded-[2rem] p-6 md:p-10 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary/10 to-transparent" />
           <div className="relative z-10">
-            <h2 className="text-headline-xl text-white mb-2">{greeting()}, {user?.name || user?.given_name || "User"}</h2>
+            <h2 className="text-headline-lg sm:text-headline-xl text-white mb-2">{greeting()}, {user?.name || user?.given_name || "User"}</h2>
             <p className="text-on-surface-variant text-body-lg">
               You have <span className="text-primary font-bold">{pendingCount + doingCount} tasks</span> pending. Let&apos;s make it productive!
             </p>
@@ -180,11 +180,11 @@ export default function Dashboard() {
                 <div className="glass p-6 rounded-2xl text-center text-on-surface-variant">No upcoming tasks</div>
               ) : (
                 upcoming.map((task) => (
-                  <div key={task.id} className="glass glass-hover p-6 rounded-2xl flex items-center gap-6 group transition-all duration-300">
+                  <div key={task.id} className="glass glass-hover p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 group transition-all duration-300">
                     <div className={`w-1 h-12 rounded-full ${priorityColor(task.priority)}`} />
-                    <div className="flex-1">
-                      <h4 className="text-headline-md text-on-surface group-hover:text-primary transition-colors">{task.task}</h4>
-                      <div className="flex items-center gap-4 mt-1 text-on-surface-variant text-body-sm">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-headline-md text-on-surface group-hover:text-primary transition-colors truncate">{task.task}</h4>
+                      <div className="flex items-center gap-4 mt-1 text-on-surface-variant text-body-sm flex-wrap">
                         {task.due_date && (
                           <span className="flex items-center gap-1">
                             <span className="material-symbols-outlined text-sm">calendar_month</span>
@@ -226,7 +226,7 @@ export default function Dashboard() {
                   onKeyDown={(e) => { if (e.key === "Enter") quickAdd(); }}
                   className="w-full bg-surface-container-lowest border border-white/10 rounded-xl px-4 py-3 text-body-md focus:border-primary outline-none transition-all"
                 />
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <input
                     type="date"
                     value={newTaskDate}
@@ -313,7 +313,7 @@ function DashboardTimer() {
       </div>
 
       {/* Timer Duration Slots */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
         {PRESETS.map((p, i) => (
           <button
             key={p.label}

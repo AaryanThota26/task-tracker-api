@@ -375,7 +375,7 @@ export default function Accounts() {
                   sessions across your devices.
                 </p>
               </div>
-              <div className="flex justify-between items-center pt-8">
+              <div className="flex flex-col sm:flex-row justify-between items-center pt-8 gap-4">
                 <button
                   onClick={handleUpdatePassword}
                   className="bg-primary text-on-primary py-3 px-8 rounded-xl text-label-md hover:brightness-110 shadow-lg shadow-primary/20 transition-all"
