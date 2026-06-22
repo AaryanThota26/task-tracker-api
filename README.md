@@ -1,28 +1,52 @@
-# Task Tracker - Cloud Native Application on Google Cloud Platform (GCP)
+# 🚀 Task Tracker - Cloud Native Application on Google Cloud Platform (GCP)
 
 ## Overview
 
-Task Tracker is a cloud-native task management application built using FastAPI, React, PostgreSQL, and Redis.
+Task Tracker is a full-stack cloud-native task management application built using **FastAPI**, **React**, **PostgreSQL**, and **Redis**.
 
-The project demonstrates an end-to-end cloud-native deployment workflow on Google Cloud Platform (GCP), including containerization with Docker, infrastructure provisioning using Terraform, orchestration using Google Kubernetes Engine (GKE), HTTPS-secured public access through Kubernetes Ingress, and application deployment using Kubernetes.
+The project demonstrates an end-to-end cloud-native deployment workflow on **Google Cloud Platform (GCP)**, including:
+
+* Containerization using Docker
+* Infrastructure provisioning using Terraform
+* Kubernetes orchestration using Google Kubernetes Engine (GKE)
+* HTTPS-secured public access through Kubernetes Ingress
+* Stateful workloads using PostgreSQL and Redis StatefulSets
+* Artifact Registry image management
+* Google OAuth authentication
+* Production deployment with a custom domain
 
 The application allows users to authenticate using Google OAuth and perform CRUD operations on tasks through a responsive web interface.
 
 ---
 
-# Live Application
+# 🌐 Live Application
 
 ## Frontend
 
 https://taskmonitor.org
 
-## API Documentation (Swagger)
+## Swagger API Documentation
 
 https://taskmonitor.org/docs
 
 ---
 
-# Architecture
+# ⭐ Key Achievements
+
+* Built and deployed a full-stack cloud-native application on GCP
+* Implemented Infrastructure as Code (IaC) using Terraform
+* Containerized frontend and backend using Docker
+* Deployed workloads on Google Kubernetes Engine (GKE)
+* Configured HTTPS using GKE Managed SSL Certificates
+* Implemented Google OAuth authentication
+* Managed PostgreSQL and Redis using Kubernetes StatefulSets
+* Configured Kubernetes Ingress with custom domain routing
+* Implemented Redis caching with automatic cache invalidation
+* Resolved production deployment, SSL, persistence, and timezone-related issues
+
+---
+
+# 🏗️ Architecture
 
 ```text
 User
@@ -31,7 +55,7 @@ User
 https://taskmonitor.org
   │
   ▼
-DNS Resolution
+Google Cloud DNS
   │
   ▼
 Google Cloud HTTP(S) Load Balancer
@@ -51,12 +75,15 @@ GKE Ingress (GCE Ingress Controller)
                        │
           ┌────────────┴────────────┐
           ▼                         ▼
-     PostgreSQL                  Redis
+ PostgreSQL StatefulSet      Redis StatefulSet
+          │                         │
+          ▼                         ▼
+ Persistent Volume           Persistent Volume
 ```
 
 ---
 
-# Tech Stack
+# 🛠️ Tech Stack
 
 ## Frontend
 
@@ -69,7 +96,7 @@ GKE Ingress (GCE Ingress Controller)
 
 * Python
 * FastAPI
-* SQLAlchemy
+* SQLAlchemy ORM
 * PostgreSQL
 * Redis
 
@@ -84,10 +111,12 @@ GKE Ingress (GCE Ingress Controller)
 * Artifact Registry
 * Managed SSL Certificates
 * Kubernetes Ingress
+* StatefulSets
+* Persistent Volumes
 
 ---
 
-# Features
+# ✨ Features
 
 ## Authentication
 
@@ -101,22 +130,24 @@ GKE Ingress (GCE Ingress Controller)
 * Update Tasks
 * Delete Tasks
 * Search Tasks
+* Due Date Tracking
 
 ## Database
 
-* PostgreSQL data storage
+* PostgreSQL persistent storage
 * SQLAlchemy ORM integration
 
 ## Caching
 
 * Redis caching layer
-* Improved task retrieval performance
-* Automatic cache invalidation on updates
+* Faster task retrieval
+* Automatic cache invalidation
 
 ## Cloud Features
 
 * Dockerized application
 * Kubernetes deployments
+* Stateful PostgreSQL and Redis
 * Kubernetes services
 * Kubernetes ingress routing
 * HTTPS secured endpoint
@@ -126,54 +157,63 @@ GKE Ingress (GCE Ingress Controller)
 
 ---
 
-# Project Structure
+# 📁 Project Structure
 
 ```text
-task-tracker/
+task-tracker-api/
+│
+├── backend/
+│   ├── main.py
+│   ├── database.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── redis_config.py
+│   ├── requirements.txt
+│   └── tests/
 │
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/
 │   │   ├── components/
+│   │   ├── pages/
+│   │   ├── context/
 │   │   └── services/
+│   ├── public/
 │   ├── Dockerfile
 │   └── package.json
 │
 ├── k8s/
 │   ├── backend-deployment.yaml
-│   ├── backend-service.yaml
 │   ├── frontend-deployment.yaml
+│   ├── backend-service.yaml
 │   ├── frontend-service.yaml
-│   ├── postgres-deployment.yaml
-│   ├── postgres-service.yaml
-│   ├── redis-deployment.yaml
-│   ├── redis-service.yaml
 │   ├── ingress.yaml
 │   ├── managed-cert.yaml
 │   ├── configmap.yaml
-│   └── secret.yaml
+│   ├── secret.yaml
+│   │
+│   └── stateful/
+│       ├── postgres-statefulset.yaml
+│       ├── postgres-headless-service.yaml
+│       ├── redis-statefulset.yaml
+│       └── redis-headless-service.yaml
 │
 ├── terraform/
 │   ├── main.tf
+│   ├── provider.tf
 │   ├── variables.tf
-│   ├── outputs.tf
-│   └── provider.tf
+│   └── outputs.tf
 │
-├── Dockerfile
+├── helm/
+│   └── task-tracker/
+│
 ├── docker-compose.yml
-├── main.py
-├── database.py
-├── models.py
-├── schemas.py
-├── redis_config.py
-├── requirements.txt
-├── .env.example
-└── README.md
+├── README.md
+└── .env.example
 ```
 
 ---
 
-# Environment Variables
+# 🔐 Environment Variables
 
 Example `.env.example`
 
@@ -187,12 +227,14 @@ DB_PASSWORD=your_password
 REDIS_HOST=redis
 REDIS_PORT=6379
 
+GOOGLE_CLIENT_ID=your_google_client_id
+
 VITE_API_URL=https://taskmonitor.org/api
 ```
 
 ---
 
-# API Endpoints
+# 📡 API Endpoints
 
 ## Get All Tasks
 
@@ -226,13 +268,13 @@ DELETE /api/tasks/{task_id}
 
 ---
 
-# Run Locally
+# 💻 Run Locally
 
 ## Clone Repository
 
 ```bash
-git clone <repository-url>
-cd task-tracker
+git clone https://github.com/<your-username>/task-tracker-api.git
+cd task-tracker-api
 ```
 
 ## Create Environment File
@@ -247,6 +289,12 @@ cp .env.example .env
 docker compose up -d
 ```
 
+## Frontend
+
+```text
+http://localhost:5173
+```
+
 ## Backend
 
 ```text
@@ -259,20 +307,14 @@ http://localhost:8000
 http://localhost:8000/docs
 ```
 
-## Frontend
-
-```text
-http://localhost:5173
-```
-
 ---
 
-# Docker
+# 🐳 Docker
 
 ## Build Backend
 
 ```bash
-docker build -t task-api .
+docker build -t task-api ./backend
 ```
 
 ## Build Frontend
@@ -281,14 +323,21 @@ docker build -t task-api .
 docker build -t task-frontend ./frontend
 ```
 
+## Start Application
+
+```bash
+docker compose up -d
+```
+
 ---
 
-# Kubernetes Deployment
+# ☸️ Kubernetes Deployment
 
 ## Deploy Resources
 
 ```bash
 kubectl apply -f k8s/
+kubectl apply -f k8s/stateful/
 ```
 
 ## Verify Deployments
@@ -297,37 +346,60 @@ kubectl apply -f k8s/
 kubectl get pods
 kubectl get svc
 kubectl get ingress
+kubectl get managedcertificate
 ```
 
 ---
 
-# Kubernetes Components
+# ☸️ Kubernetes Components
 
-The application is deployed using the following Kubernetes resources:
-
-### Deployments
+## Deployments
 
 * Frontend Deployment
 * Backend Deployment
-* PostgreSQL Deployment
-* Redis Deployment
 
-### Services
+## StatefulSets
+
+* PostgreSQL StatefulSet
+* Redis StatefulSet
+
+## Services
 
 * Frontend Service
 * Backend Service
-* PostgreSQL Service
-* Redis Service
+* PostgreSQL Headless Service
+* Redis Headless Service
 
-### Ingress
+## Networking
 
 * GCE Ingress Controller
 * HTTPS Routing
 * Managed SSL Certificate
+* Custom Domain Mapping
 
 ---
 
-# Terraform Deployment
+# 🌍 Production Deployment
+
+The application is deployed on **Google Kubernetes Engine (GKE Autopilot)** using:
+
+* GKE Autopilot Cluster
+* Kubernetes Deployments
+* Kubernetes StatefulSets
+* Kubernetes Services
+* Kubernetes Ingress
+* Google Cloud Load Balancer
+* Artifact Registry
+* Managed SSL Certificates
+* Custom Domain
+
+Production URL:
+
+https://taskmonitor.org
+
+---
+
+# 🏗️ Terraform Deployment
 
 ## Initialize Terraform
 
@@ -335,7 +407,7 @@ The application is deployed using the following Kubernetes resources:
 terraform init
 ```
 
-## Plan Infrastructure
+## Review Infrastructure Plan
 
 ```bash
 terraform plan
@@ -355,87 +427,102 @@ terraform state list
 
 ---
 
-# Infrastructure as Code (IaC)
+# 📦 Infrastructure as Code (IaC)
 
 Terraform is used to provision and manage cloud infrastructure.
 
-### Benefits
+Benefits:
 
 * Reproducible deployments
 * Version-controlled infrastructure
 * Automated provisioning
 * Reduced manual configuration
 * Consistent environments
+* Infrastructure lifecycle management
 
 ---
 
-# Deployment Validation
+# 📈 Scalability
 
-Infrastructure successfully managed by Terraform:
+The application is deployed on Google Kubernetes Engine with multiple replicas.
 
-```text
-No changes. Your infrastructure matches the configuration.
+Current deployment:
 
-Apply complete!
-Resources: 0 added, 0 changed, 0 destroyed.
+* Frontend: 2 Replicas
+* Backend: 2 Replicas
+* PostgreSQL: 1 Stateful Replica
+* Redis: 1 Stateful Replica
+
+Kubernetes allows horizontal scaling as traffic increases.
+
+---
+
+# 🔒 Security
+
+* HTTPS enabled using GKE Managed Certificates
+* TLS encryption for all external traffic
+* Kubernetes Secrets for sensitive configuration
+* Environment variable management
+* Google OAuth authentication
+* Separation of application and infrastructure configuration
+
+---
+
+# 🧪 Testing
+
+Backend includes automated tests for:
+
+* Task creation
+* Task retrieval
+* Task updates
+* Task deletion
+* Search functionality
+* Redis cache invalidation
+
+Run tests:
+
+```bash
+pytest
 ```
 
 ---
 
-# Security
+# 🚧 Engineering Challenges Solved
 
-* HTTPS enabled using GKE Managed Certificates
-* TLS encryption for secure communication
-* Kubernetes Secrets for sensitive configuration
-* Environment variables following 12-Factor App principles
-* Secure OAuth authentication using Google Login
+During development and deployment, the following production issues were identified and resolved:
 
----
-
-# Scalability
-
-The application is deployed on Google Kubernetes Engine (GKE) with multiple frontend and backend replicas.
-
-### Current Deployment
-
-* Frontend: 2 Replicas
-* Backend: 2 Replicas
-* PostgreSQL: 1 Replica
-* Redis: 1 Replica
-
-Kubernetes enables horizontal scaling by increasing pod replicas as traffic grows.
+* HTTPS certificate provisioning using GKE Managed Certificates
+* Kubernetes Ingress routing configuration
+* PostgreSQL persistence using StatefulSets and PVCs
+* Redis service discovery inside Kubernetes
+* Docker Compose frontend/backend networking
+* Timezone handling across React, FastAPI, and PostgreSQL
+* Backend image rollout through Artifact Registry and GKE
+* Health probes and service availability improvements
 
 ---
 
-# GCP Resources Used
+# 🔮 Future Improvements
 
-* Google Kubernetes Engine (GKE)
-* Artifact Registry
-* Google Cloud Load Balancer
-* Managed SSL Certificates
-* Kubernetes Ingress
-* Compute Engine (GKE Nodes)
-
----
-
-# Screenshots
-
-The repository includes screenshots demonstrating:
-
-* Terraform Deployment
-* GKE Cluster
-* Kubernetes Pods
-* Kubernetes Services
-* Kubernetes Ingress
-* HTTPS Access
-* Task Dashboard
-* Task Creation
-* CRUD Operations
+* GitHub Actions CI/CD Pipeline
+* Automated Kubernetes deployments
+* Cloud SQL integration
+* Google Memorystore integration
+* Horizontal Pod Autoscaler (HPA)
+* Prometheus and Grafana monitoring
+* Centralized logging with Google Cloud Logging
+* Alembic database migrations
 
 ---
 
-# Author
+# 👨‍💻 Author
 
 **Aaryan Thota**
 
-Cloud Native Application Deployment on Google Cloud Platform using FastAPI, React, Kubernetes, Terraform, PostgreSQL, and Redis.
+Cloud Native Application Deployment on Google Cloud Platform using FastAPI, React, Kubernetes, Terraform, PostgreSQL, Redis, Docker, and Google Cloud Services.
+
+---
+
+# 📄 License
+
+This project is for educational and portfolio purposes.
