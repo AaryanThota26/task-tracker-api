@@ -9,10 +9,6 @@ metadata:
     networking.gke.io/managed-certificates: taskmonitor-cert
 
 spec:
-  tls:
-  - hosts:
-    - taskmonitor.org
-    - www.taskmonitor.org
   rules:
   - host: taskmonitor.org
     http:
