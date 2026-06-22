@@ -47,8 +47,10 @@ services:
 
     container_name: task-frontend
 
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+
     ports:
-      - "5173:3000"
+      - "5173:5173"
 
     depends_on:
       - app
