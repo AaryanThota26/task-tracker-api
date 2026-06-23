@@ -1,337 +1,186 @@
-# Task Tracker
+# 🚀 Task Tracker - Cloud Native Application on Google Cloud Platform (GCP)
 
-[![Live Site](https://img.shields.io/badge/Live-taskmonitor.org-4285F4?style=flat-square&logo=google-chrome)](https://taskmonitor.org)
-[![API Docs](https://img.shields.io/badge/API_Docs-Swagger-85EA2D?style=flat-square&logo=swagger)](https://taskmonitor.org/docs)
-[![Kubernetes](https://img.shields.io/badge/Kubernetes-GKE-326CE5?style=flat-square&logo=kubernetes)](https://cloud.google.com/kubernetes-engine)
-[![Terraform](https://img.shields.io/badge/IaC-Terraform-7B42BC?style=flat-square&logo=terraform)](https://www.terraform.io)
-[![Python](https://img.shields.io/badge/Backend-FastAPI-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
-[![React](https://img.shields.io/badge/Frontend-React-61DAFB?style=flat-square&logo=react)](https://reactjs.org)
-[![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)]()
+## Overview
 
-A full-stack task management application with Google OAuth authentication, deployed on Google Kubernetes Engine (GKE) with PostgreSQL and Redis.
+Task Tracker is a full-stack cloud-native task management application built using **FastAPI**, **React**, **PostgreSQL**, and **Redis**.
 
-**Live**: [https://taskmonitor.org](https://taskmonitor.org)  
-**API Docs**: [https://taskmonitor.org/docs](https://taskmonitor.org/docs)
+The project demonstrates an end-to-end cloud-native deployment workflow on **Google Cloud Platform (GCP)**, including:
 
----
+* Containerization using Docker
+* Infrastructure provisioning using Terraform
+* Kubernetes orchestration using Google Kubernetes Engine (GKE)
+* HTTPS-secured public access through Kubernetes Ingress
+* Stateful workloads using PostgreSQL and Redis StatefulSets
+* Artifact Registry image management
+* Google OAuth authentication
+* Production deployment with a custom domain
 
-## Table of Contents
-
-- [Architecture](#architecture)
-- [Tech Stack](#tech-stack)
-- [Features](#features)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Local Development](#local-development)
-  - [Docker](#docker)
-- [API Reference](#api-reference)
-- [Deployment](#deployment)
-  - [Kubernetes](#kubernetes)
-  - [Terraform](#terraform)
-- [Testing](#testing)
-- [Project Structure](#project-structure)
-- [Engineering Highlights](#engineering-highlights)
-- [Roadmap](#roadmap)
+The application allows users to authenticate using Google OAuth and perform CRUD operations on tasks through a responsive web interface.
 
 ---
 
-## Architecture
+# 🌐 Live Application
 
-```
-User
-  |
-  v
+## Frontend
+
 https://taskmonitor.org
-  |
-  v
+
+## Swagger API Documentation
+
+https://taskmonitor.org/docs
+
+---
+
+# ⭐ Key Achievements
+
+* Built and deployed a full-stack cloud-native application on GCP
+* Implemented Infrastructure as Code (IaC) using Terraform
+* Containerized frontend and backend using Docker
+* Deployed workloads on Google Kubernetes Engine (GKE)
+* Configured HTTPS using GKE Managed SSL Certificates
+* Implemented Google OAuth authentication
+* Managed PostgreSQL and Redis using Kubernetes StatefulSets
+* Configured Kubernetes Ingress with custom domain routing
+* Implemented Redis caching with automatic cache invalidation
+* Resolved production deployment, SSL, persistence, and timezone-related issues
+
+---
+
+# 🏗️ Architecture
+
+```text
+User
+  │
+  ▼
+https://taskmonitor.org
+  │
+  ▼
 Google Cloud DNS
-  |
-  v
+  │
+  ▼
 Google Cloud HTTP(S) Load Balancer
-  |
-  v
+  │
+  ▼
 GKE Ingress (GCE Ingress Controller)
-  |
-  +--> Frontend Service --> React Pods (x2)
-  |
-  +--> Backend Service --> FastAPI Pods (x2)
-                            |
-              +-------------+-------------+
-              |                           |
-      PostgreSQL StatefulSet        Redis StatefulSet
-              |                           |
-      Persistent Volume (10Gi)     Persistent Volume (5Gi)
+  │
+  ├──────────────► Frontend Service
+  │                    │
+  │                    ▼
+  │               React Pods
+  │
+  └──────────────► Backend Service
+                       │
+                       ▼
+                  FastAPI Pods
+                       │
+          ┌────────────┴────────────┐
+          ▼                         ▼
+ PostgreSQL StatefulSet      Redis StatefulSet
+          │                         │
+          ▼                         ▼
+ Persistent Volume           Persistent Volume
 ```
-
-The GCE Ingress Controller provides path-based routing:
-- `/api`, `/docs`, `/openapi.json` route to the **backend** service
-- All other paths (`/`) route to the **frontend** service
-
-HTTP requests are automatically upgraded to HTTPS via GKE Managed Certificates.
 
 ---
 
-## Tech Stack
+# 🛠️ Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | React 19, Vite 8, Tailwind CSS 4, React Router 7, Axios |
-| **Backend** | Python 3.11, FastAPI, SQLAlchemy 2.0, Pydantic 2 |
-| **Database** | PostgreSQL 17 |
-| **Cache** | Redis 7 |
-| **Auth** | Google OAuth (client-side JWT) |
-| **Containerization** | Docker, Docker Compose |
-| **Orchestration** | Kubernetes, GKE Autopilot |
-| **Infrastructure** | Terraform (GCP provider) |
-| **Packaging** | Helm |
-| **Registry** | Artifact Registry |
-| **Networking** | GCE Ingress, Managed SSL Certificates |
+## Frontend
 
----
+* React
+* Vite
+* Axios
+* Google OAuth
 
-## Features
+## Backend
 
-- **Google OAuth** authentication with per-user task isolation
-- **CRUD** operations on tasks with status (pending/doing/done/missed) and priority (low/medium/high)
-- **Search** with case-insensitive matching on task name and description
-- **Redis caching** with a cache-aside pattern and automatic invalidation on writes (TTL: 300s)
-- **Pomodoro timer** with configurable focus/break presets
-- **Responsive design** with dark theme, glass-morphism UI, and customizable accent colors
-- **Due date tracking** with Today, Upcoming, and timeline views
-- **Graceful degradation** — the application remains fully functional if Redis is unavailable
+* Python
+* FastAPI
+* SQLAlchemy ORM
+* PostgreSQL
+* Redis
 
----
+## DevOps & Cloud
 
-## Getting Started
-
-### Prerequisites
-
-- Python 3.11+
-- Node.js 22+
-- Docker & Docker Compose (for containerized setup)
-- A Google OAuth client ID (for authentication)
-
-### Local Development
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/AaryanThota26/task-tracker-api.git
-   cd task-tracker-api
-   ```
-
-2. **Configure environment variables**
-
-   ```bash
-   cp .env.example backend/.env
-   ```
-
-   Edit `backend/.env` with your database credentials and Redis host.
-
-3. **Run the backend**
-
-   ```bash
-   cd backend
-   pip install -r requirements.txt
-   uvicorn main:app --reload --port 8000
-   ```
-
-4. **Run the frontend**
-
-   ```bash
-   cd frontend
-   npm install
-   npm run dev
-   ```
-
-5. **Access the application**
-
-   - Frontend: [http://localhost:5173](http://localhost:5173)
-   - API: [http://localhost:8000](http://localhost:8000)
-   - Swagger docs: [http://localhost:8000/docs](http://localhost:8000/docs)
-
-### Docker
-
-```bash
-docker compose up -d
-```
-
-This starts four services: PostgreSQL, Redis, the FastAPI backend (port 8000), and the React frontend with Vite dev server (port 5173).
+* Docker
+* Docker Compose
+* Kubernetes
+* Google Kubernetes Engine (GKE)
+* Terraform
+* Google Cloud Platform (GCP)
+* Artifact Registry
+* Managed SSL Certificates
+* Kubernetes Ingress
+* StatefulSets
+* Persistent Volumes
 
 ---
 
-## API Reference
+# ✨ Features
 
-All endpoints are prefixed with `/api`. Authentication is managed client-side via Google OAuth; the `user_email` query parameter is used for user scoping.
+## Authentication
 
-### List Tasks
+* Google OAuth Login
+* User-specific task management
 
-```http
-GET /api/tasks?user_email=<email>&status=<status>&priority=<priority>&search=<query>
-```
+## Task Management
 
-| Parameter | Type | Description |
-|---|---|---|
-| `user_email` | `string` | **Required**. Owner of the tasks |
-| `status` | `string` | Filter by status: `pending`, `doing`, `done`, `missed` |
-| `priority` | `string` | Filter by priority: `low`, `medium`, `high` |
-| `search` | `string` | Case-insensitive search on task name and description |
+* Create Tasks
+* View Tasks
+* Update Tasks
+* Delete Tasks
+* Search Tasks
+* Due Date Tracking
 
-**Response**: `200 OK` — Array of task objects.
+## Database
 
-```json
-[
-  {
-    "id": 1,
-    "task": "Buy groceries",
-    "description": "Milk and eggs",
-    "user_email": "user@example.com",
-    "status": "pending",
-    "priority": "medium",
-    "due_date": "2025-12-01T10:00:00+00:00"
-  }
-]
-```
+* PostgreSQL persistent storage
+* SQLAlchemy ORM integration
 
-### Create Task
+## Caching
 
-```http
-POST /api/tasks
-Content-Type: application/json
+* Redis caching layer
+* Faster task retrieval
+* Automatic cache invalidation
 
-{
-  "task": "Write unit tests",
-  "description": "Test the FastAPI backend",
-  "user_email": "user@example.com",
-  "status": "pending",
-  "priority": "high",
-  "due_date": "2025-12-01T10:00:00"
-}
-```
+## Cloud Features
 
-**Response**: `200 OK` — The created task object with auto-generated `id`.
-
-### Get Task
-
-```http
-GET /api/tasks/{task_id}?user_email=<email>
-```
-
-**Response**: `200 OK` — Single task object.  
-**Error**: `404 Not Found` — Task does not exist or does not belong to the user.
-
-### Update Task
-
-```http
-PUT /api/tasks/{task_id}
-Content-Type: application/json
-
-{
-  "task": "Updated task name",
-  "description": "Updated description",
-  "status": "doing",
-  "priority": "high",
-  "due_date": "2025-12-15T10:00:00",
-  "user_email": "user@example.com"
-}
-```
-
-All fields are optional. Only provided fields are updated.
-
-**Response**: `200 OK` — `{ "message": "Task updated", "task": { ... } }`  
-**Error**: `404 Not Found`
-
-### Delete Task
-
-```http
-DELETE /api/tasks/{task_id}?user_email=<email>
-```
-
-**Response**: `200 OK` — `{ "message": "Task deleted" }`  
-**Error**: `404 Not Found`
+* Dockerized application
+* Kubernetes deployments
+* Stateful PostgreSQL and Redis
+* Kubernetes services
+* Kubernetes ingress routing
+* HTTPS secured endpoint
+* Custom domain integration
+* Managed SSL certificates
+* Infrastructure as Code using Terraform
 
 ---
 
-## Deployment
+# 📁 Project Structure
 
-### Kubernetes
-
-Apply the manifests to any Kubernetes cluster:
-
-```bash
-kubectl apply -f k8s/stateful/
-kubectl apply -f k8s/
-```
-
-Verify the deployment:
-
-```bash
-kubectl get pods
-kubectl get svc
-kubectl get ingress
-kubectl get managedcertificate
-```
-
-The cluster is configured with:
-- **2 replicas** each for frontend and backend Deployments
-- **Readiness probes** (HTTP GET `/`, delay 5s, period 10s)
-- **Liveness probes** (HTTP GET `/`, delay 10s, period 20s)
-- **Secrets** for sensitive configuration via `secretKeyRef`
-
-### Terraform
-
-Provision the GKE Autopilot cluster:
-
-```bash
-cd terraform
-terraform init
-terraform plan
-terraform apply
-```
-
-**Note**: The Terraform configuration provisions only the GKE cluster. Kubernetes resources are applied separately via `kubectl` or Helm.
-
----
-
-## Testing
-
-The backend includes 16 unit tests covering all CRUD operations, filtering, search, and Redis cache invalidation.
-
-```bash
-cd backend
-pytest -v
-```
-
-The test suite uses:
-- **SQLite in-memory** as a drop-in replacement for PostgreSQL
-- **FakeRedis** — an in-memory dict implementing `get`, `setex`, `delete`, and `scan_iter`
-- **Autouse fixtures** to clean both database and cache before each test
-
----
-
-## Project Structure
-
-```
+```text
 task-tracker-api/
+│
 ├── backend/
-│   ├── main.py              # FastAPI application with route handlers
-│   ├── database.py           # SQLAlchemy engine and session configuration
-│   ├── models.py             # ORM models (TaskDB)
-│   ├── schemas.py            # Pydantic request/response schemas
-│   ├── redis_config.py       # Redis client initialization
+│   ├── main.py
+│   ├── database.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── redis_config.py
 │   ├── requirements.txt
-│   ├── .env
 │   └── tests/
-│       ├── conftest.py       # Fixtures and test infrastructure
-│       └── test_api.py       # 16 unit tests
+│
 ├── frontend/
 │   ├── src/
-│   │   ├── pages/            # Login, Dashboard, Today, Upcoming, Accounts
-│   │   ├── components/       # Layout, Sidebar, TopBar, NewTaskModal
-│   │   ├── context/          # SearchContext, NotificationContext
-│   │   └── services/         # Axios client with error interceptor
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── context/
+│   │   └── services/
+│   ├── public/
 │   ├── Dockerfile
 │   └── package.json
+│
 ├── k8s/
 │   ├── backend-deployment.yaml
 │   ├── frontend-deployment.yaml
@@ -341,80 +190,339 @@ task-tracker-api/
 │   ├── managed-cert.yaml
 │   ├── configmap.yaml
 │   ├── secret.yaml
+│   │
 │   └── stateful/
 │       ├── postgres-statefulset.yaml
 │       ├── postgres-headless-service.yaml
 │       ├── redis-statefulset.yaml
 │       └── redis-headless-service.yaml
+│
 ├── terraform/
 │   ├── main.tf
 │   ├── provider.tf
 │   ├── variables.tf
 │   └── outputs.tf
+│
 ├── helm/
 │   └── task-tracker/
+│
 ├── docker-compose.yml
+├── README.md
 └── .env.example
 ```
 
 ---
 
-## Engineering Highlights
+# 🔐 Environment Variables
 
-### Redis Cache-Aside Pattern
+Example `.env.example`
 
-The backend implements the standard cache-aside pattern with graceful degradation:
+```env
+DB_HOST=postgres
+DB_PORT=5432
+DB_NAME=taskdb
+DB_USER=postgres
+DB_PASSWORD=your_password
 
-1. Check Redis for the cached result
-2. On **hit**: return immediately
-3. On **miss**: query PostgreSQL, populate Redis with a 300-second TTL, return
-4. On **write** (create/update/delete): invalidate all list caches matching `tasks_{email}_*` and the single-task cache
+REDIS_HOST=redis
+REDIS_PORT=6379
 
-Every Redis operation is wrapped in `try/except` — if Redis is unreachable, the application continues to work against PostgreSQL directly.
+GOOGLE_CLIENT_ID=your_google_client_id
 
-### Stateful Workloads
-
-PostgreSQL and Redis run as StatefulSets with:
-- **PersistentVolumeClaims** (10Gi for PostgreSQL, 5Gi for Redis)
-- **Headless services** (`clusterIP: None`) for stable pod DNS
-- **Ordered pod startup** guaranteed by the StatefulSet controller
-
-### Testing Strategy
-
-- SQLite `:memory:` engine replaces PostgreSQL via monkeypatching
-- `FakeRedis` class replaces the Redis client with an in-memory `dict`
-- Autouse fixtures reset all state before every test
-- 16 tests validate CRUD operations, filtering, search, and cache invalidation
-
-### Security & Production Readiness
-
-- HTTPS enforced via GKE Managed Certificates
-- CORS restricted to known origins (`localhost:5173`, `taskmonitor.org`, `www.taskmonitor.org`)
-- Health probes configured for both frontend and backend
-- Environment configuration separated from application code
+VITE_API_URL=https://taskmonitor.org/api
+```
 
 ---
 
-## Roadmap
+# 📡 API Endpoints
 
-- [ ] GitHub Actions CI/CD pipeline with automated deployments
-- [ ] Cloud SQL (managed PostgreSQL) integration
-- [ ] Google Memorystore (managed Redis) integration
-- [ ] Horizontal Pod Autoscaler (HPA) for demand-based scaling
-- [ ] Prometheus + Grafana monitoring and alerting
-- [ ] Centralized logging with Google Cloud Logging / Cloud Operations
-- [ ] Alembic database migrations for safe schema evolution
-- [ ] Server-side Google OAuth token verification
-- [ ] Notification system with WebSocket support
+## Get All Tasks
+
+```http
+GET /api/tasks
+```
+
+## Get Task By ID
+
+```http
+GET /api/tasks/{task_id}
+```
+
+## Create Task
+
+```http
+POST /api/tasks
+```
+
+## Update Task
+
+```http
+PUT /api/tasks/{task_id}
+```
+
+## Delete Task
+
+```http
+DELETE /api/tasks/{task_id}
+```
 
 ---
 
-## Author
+# 💻 Run Locally
+
+## Clone Repository
+
+```bash
+git clone https://github.com/<your-username>/task-tracker-api.git
+cd task-tracker-api
+```
+
+## Create Environment File
+
+```bash
+cp .env.example .env
+```
+
+## Start Containers
+
+```bash
+docker compose up -d
+```
+
+## Frontend
+
+```text
+http://localhost:5173
+```
+
+## Backend
+
+```text
+http://localhost:8000
+```
+
+## Swagger Documentation
+
+```text
+http://localhost:8000/docs
+```
+
+---
+
+# 🐳 Docker
+
+## Build Backend
+
+```bash
+docker build -t task-api ./backend
+```
+
+## Build Frontend
+
+```bash
+docker build -t task-frontend ./frontend
+```
+
+## Start Application
+
+```bash
+docker compose up -d
+```
+
+---
+
+# ☸️ Kubernetes Deployment
+
+## Deploy Resources
+
+```bash
+kubectl apply -f k8s/
+kubectl apply -f k8s/stateful/
+```
+
+## Verify Deployments
+
+```bash
+kubectl get pods
+kubectl get svc
+kubectl get ingress
+kubectl get managedcertificate
+```
+
+---
+
+# ☸️ Kubernetes Components
+
+## Deployments
+
+* Frontend Deployment
+* Backend Deployment
+
+## StatefulSets
+
+* PostgreSQL StatefulSet
+* Redis StatefulSet
+
+## Services
+
+* Frontend Service
+* Backend Service
+* PostgreSQL Headless Service
+* Redis Headless Service
+
+## Networking
+
+* GCE Ingress Controller
+* HTTPS Routing
+* Managed SSL Certificate
+* Custom Domain Mapping
+
+---
+
+# 🌍 Production Deployment
+
+The application is deployed on **Google Kubernetes Engine (GKE Autopilot)** using:
+
+* GKE Autopilot Cluster
+* Kubernetes Deployments
+* Kubernetes StatefulSets
+* Kubernetes Services
+* Kubernetes Ingress
+* Google Cloud Load Balancer
+* Artifact Registry
+* Managed SSL Certificates
+* Custom Domain
+
+Production URL:
+
+https://taskmonitor.org
+
+---
+
+# 🏗️ Terraform Deployment
+
+## Initialize Terraform
+
+```bash
+terraform init
+```
+
+## Review Infrastructure Plan
+
+```bash
+terraform plan
+```
+
+## Apply Infrastructure
+
+```bash
+terraform apply
+```
+
+## Verify State
+
+```bash
+terraform state list
+```
+
+---
+
+# 📦 Infrastructure as Code (IaC)
+
+Terraform is used to provision and manage cloud infrastructure.
+
+Benefits:
+
+* Reproducible deployments
+* Version-controlled infrastructure
+* Automated provisioning
+* Reduced manual configuration
+* Consistent environments
+* Infrastructure lifecycle management
+
+---
+
+# 📈 Scalability
+
+The application is deployed on Google Kubernetes Engine with multiple replicas.
+
+Current deployment:
+
+* Frontend: 2 Replicas
+* Backend: 2 Replicas
+* PostgreSQL: 1 Stateful Replica
+* Redis: 1 Stateful Replica
+
+Kubernetes allows horizontal scaling as traffic increases.
+
+---
+
+# 🔒 Security
+
+* HTTPS enabled using GKE Managed Certificates
+* TLS encryption for all external traffic
+* Kubernetes Secrets for sensitive configuration
+* Environment variable management
+* Google OAuth authentication
+* Separation of application and infrastructure configuration
+
+---
+
+# 🧪 Testing
+
+Backend includes automated tests for:
+
+* Task creation
+* Task retrieval
+* Task updates
+* Task deletion
+* Search functionality
+* Redis cache invalidation
+
+Run tests:
+
+```bash
+pytest
+```
+
+---
+
+# 🚧 Engineering Challenges Solved
+
+During development and deployment, the following production issues were identified and resolved:
+
+* HTTPS certificate provisioning using GKE Managed Certificates
+* Kubernetes Ingress routing configuration
+* PostgreSQL persistence using StatefulSets and PVCs
+* Redis service discovery inside Kubernetes
+* Docker Compose frontend/backend networking
+* Timezone handling across React, FastAPI, and PostgreSQL
+* Backend image rollout through Artifact Registry and GKE
+* Health probes and service availability improvements
+
+---
+
+# 🔮 Future Improvements
+
+* GitHub Actions CI/CD Pipeline
+* Automated Kubernetes deployments
+* Cloud SQL integration
+* Google Memorystore integration
+* Horizontal Pod Autoscaler (HPA)
+* Prometheus and Grafana monitoring
+* Centralized logging with Google Cloud Logging
+* Alembic database migrations
+
+---
+
+# 👨‍💻 Author
 
 **Aaryan Thota**
 
+Cloud Native Application Deployment on Google Cloud Platform using FastAPI, React, Kubernetes, Terraform, PostgreSQL, Redis, Docker, and Google Cloud Services.
+
 ---
 
-## License
+# 📄 License
 
-This project is provided for educational and portfolio purposes.
+This project is for educational and portfolio purposes.
