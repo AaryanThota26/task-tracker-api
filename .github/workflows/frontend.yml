@@ -1,0 +1,95 @@
+name: Frontend CI/CD
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TRIGGER CONDITIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+# This workflow triggers ONLY when files under the frontend/ directory change.
+# It will NOT run for backend/, migrations/, or root-level config changes.
+#
+# Examples:
+#   • frontend/src/App.jsx changed       →  This workflow runs
+#   • backend/main.py changed            →  This workflow does NOT run
+#   • migrations/versions/001.py added   →  This workflow does NOT run
+#   • k8s/ingress.yaml changed           →  This workflow does NOT run
+#   • README.md changed                  →  This workflow does NOT run
+# ═══════════════════════════════════════════════════════════════════════════════
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'frontend/**'
+
+env:
+  # Target GCP Artifact Registry repository
+  # Verified against k8s/frontend-deployment.yaml image path
+  ARTIFACT_REGISTRY: us-central1-docker.pkg.dev/task-tracker-499005/task-tracker
+  IMAGE_NAME: task-frontend
+  GKE_CLUSTER: task-tracker-cluster
+  GKE_ZONE: us-central1
+  K8S_NAMESPACE: default
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write  # Required for Google workload identity federation
+
+    steps:
+      # ───────────────────────────────────────────────────────────────────────
+      # 1. Checkout repository
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ───────────────────────────────────────────────────────────────────────
+      # 2. Authenticate to Google Cloud
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      # ───────────────────────────────────────────────────────────────────────
+      # 3. Configure Docker for Artifact Registry
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Configure Docker
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Configure Docker authentication
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      # ───────────────────────────────────────────────────────────────────────
+      # 4. Build and push frontend image
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Build and push
+        working-directory: frontend
+        run: |
+          IMAGE_TAG="${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          docker build -t "$IMAGE_TAG" .
+          docker push "$IMAGE_TAG"
+          echo "Pushed $IMAGE_TAG"
+
+      # ───────────────────────────────────────────────────────────────────────
+      # 5. Set up kubectl and deploy to GKE
+      # ───────────────────────────────────────────────────────────────────────
+      # ⚠️  NOTE: A Helm chart also exists in helm/task-tracker/.
+      #    If Helm is the actual deployment mechanism, replace the steps below
+      #    with: helm upgrade task-tracker ./helm/task-tracker --set frontend.image.tag=<sha>
+      #    The deployment name used here ("frontend") matches k8s/frontend-deployment.yaml.
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+
+      - name: Update deployment image
+        run: |
+          kubectl set image deployment/frontend frontend="${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" -n ${{ env.K8S_NAMESPACE }}
+          kubectl rollout status deployment/frontend -n ${{ env.K8S_NAMESPACE }} --timeout=300s

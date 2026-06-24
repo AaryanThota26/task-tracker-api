@@ -1,0 +1,90 @@
+name: Database Migrations
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TRIGGER CONDITIONS
+# ═══════════════════════════════════════════════════════════════════════════════
+# This workflow triggers ONLY when files under the migrations/ directory change.
+# It is intentionally a SCAFFOLD / PLACEHOLDER — no actual migration command is
+# executed yet because the project does not currently have a migration framework
+# installed.
+#
+# Examples:
+#   • migrations/versions/001_init.py added  →  This workflow runs (no-op)
+#   • backend/main.py changed                →  This workflow does NOT run
+#   • frontend/src/App.jsx changed           →  This workflow does NOT run
+#   • k8s/ingress.yaml changed               →  This workflow does NOT run
+# ═══════════════════════════════════════════════════════════════════════════════
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'migrations/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'migrations/**'
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ───────────────────────────────────────────────────────────────────────
+      # 1. Checkout repository
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ───────────────────────────────────────────────────────────────────────
+      # 2. Placeholder step
+      # ───────────────────────────────────────────────────────────────────────
+      # FIXME: Replace this placeholder with a real migration step once
+      #        Alembic (or another migration tool) is configured.
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Migration placeholder
+        run: |
+          echo "═════════════════════════════════════════════════════════════════"
+          echo "  DB MIGRATION WORKFLOW — PLACEHOLDER / SCAFFOLD"
+          echo "═════════════════════════════════════════════════════════════════"
+          echo ""
+          echo "This workflow fired because files under migrations/ were changed."
+          echo ""
+          echo "CURRENT STATUS: No-op. Nothing was executed."
+          echo ""
+          echo "REASON: The project does not currently have a migration framework"
+          echo "        such as Alembic installed or a migrations/ directory present."
+          echo "        The backend uses SQLAlchemy with auto-create on startup:"
+          echo "          Base.metadata.create_all(bind=engine)"
+          echo ""
+          echo "═════════════════════════════════════════════════════════════════"
+          echo "  MISSING ITEMS REQUIRED TO MAKE THIS WORKFLOW OPERATIONAL"
+          echo "═════════════════════════════════════════════════════════════════"
+          echo ""
+          echo "  1. Add 'alembic' to backend/requirements.txt"
+          echo ""
+          echo "  2. Run 'alembic init migrations' inside the backend/ directory"
+          echo "     (or at repo root, depending on project preference)."
+          echo ""
+          echo "  3. Commit the resulting files:"
+          echo "       • alembic.ini"
+          echo "       • migrations/env.py"
+          echo "       • migrations/script.py.mako"
+          echo "       • migrations/versions/  (directory)"
+          echo ""
+          echo "  4. Replace this placeholder step with an actual migration job:"
+          echo "       - Set up Python (actions/setup-python@v5)"
+          echo "       - Install backend dependencies (pip install -r requirements.txt)"
+          echo "       - Run: alembic upgrade head"
+          echo "     OR, if migrations run inside a Job pod:"
+          echo "       - Build a migrations image"
+          echo "       - kubectl apply -f k8s/migration-job.yaml"
+          echo ""
+          echo "  5. Provide DB connection credentials via GitHub Secrets, e.g.:"
+          echo "       • DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD"
+          echo "       • Or a single DATABASE_URL secret"
+          echo ""
+          echo "  6. (Optional) Add a health-check or verification step after migration"
+          echo "     to confirm schema version matches alembic revision."
+          echo ""
+          echo "═════════════════════════════════════════════════════════════════"
+          exit 0
