@@ -2,37 +2,70 @@ import { useState } from "react";
 import api from "../services/api";
 import toast from "react-hot-toast";
 
-export default function NewTaskModal({ onClose, onCreated }) {
-  const [task, setTask] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("medium");
-  const [status, setStatus] = useState("pending");
-  const [dueDate, setDueDate] = useState("");
+function getInitialState(task) {
+  if (!task) {
+    return {
+      taskName: "",
+      description: "",
+      priority: "medium",
+      status: "pending",
+      dueDate: "",
+    };
+  }
+  return {
+    taskName: task.task || "",
+    description: task.description || "",
+    priority: task.priority || "medium",
+    status: task.status || "pending",
+    dueDate: task.due_date ? task.due_date.slice(0, 16) : "",
+  };
+}
+
+export default function NewTaskModal({ onClose, onCreated, task = null }) {
+  const initial = getInitialState(task);
+  const [taskName, setTaskName] = useState(initial.taskName);
+  const [description, setDescription] = useState(initial.description);
+  const [priority, setPriority] = useState(initial.priority);
+  const [status, setStatus] = useState(initial.status);
+  const [dueDate, setDueDate] = useState(initial.dueDate);
   const user = JSON.parse(localStorage.getItem("user") || "null");
+  const isEdit = Boolean(task);
+
+  const resetForm = () => {
+    setTaskName("");
+    setDescription("");
+    setPriority("medium");
+    setStatus("pending");
+    setDueDate("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!task.trim()) return;
+    if (!taskName.trim()) return;
+
+    const payload = {
+      task: taskName,
+      description: description || null,
+      user_email: user?.email,
+      priority,
+      status,
+      due_date: dueDate ? new Date(dueDate).toISOString() : null,
+    };
+
     try {
-      await api.post("/tasks", {
-        task,
-        description: description || null,
-        user_email: user.email,
-        priority,
-        status,
-        due_date: dueDate ? new Date(dueDate).toISOString() : null,
-      });
-      toast.success("Task created");
-      setTask("");
-      setDescription("");
-      setPriority("medium");
-      setStatus("pending");
-      setDueDate("");
+      if (isEdit) {
+        await api.put(`/tasks/${task.id}`, payload);
+        toast.success("Task updated");
+      } else {
+        await api.post("/tasks", payload);
+        toast.success("Task created");
+      }
+      resetForm();
       onCreated();
     } catch (err) {
       console.error(err);
       const detail = err.response?.data?.detail || err.message || "Unknown error";
-      toast.error(`Failed to create task: ${detail}`);
+      toast.error(`Failed to ${isEdit ? "update" : "create"} task: ${detail}`);
     }
   };
 
@@ -40,7 +73,7 @@ export default function NewTaskModal({ onClose, onCreated }) {
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div className="glass-card p-6 sm:p-8 rounded-2xl w-full max-w-lg mx-4 animate-in" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-headline-md font-bold text-on-surface">New Task</h3>
+          <h3 className="text-headline-md font-bold text-on-surface">{isEdit ? "Edit Task" : "New Task"}</h3>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-white/5 text-on-surface-variant">
             <span className="material-symbols-outlined">close</span>
           </button>
@@ -50,8 +83,8 @@ export default function NewTaskModal({ onClose, onCreated }) {
             <label className="text-label-sm text-on-surface-variant uppercase ml-1">Task Name</label>
             <input
               type="text"
-              value={task}
-              onChange={(e) => setTask(e.target.value)}
+              value={taskName}
+              onChange={(e) => setTaskName(e.target.value)}
               className="w-full bg-surface-container-lowest border border-white/10 rounded-xl px-4 py-3 text-body-md focus:border-primary focus:ring-2 focus:ring-primary/50 outline-none transition-all mt-1"
               placeholder="What needs to be done?"
               required
@@ -107,7 +140,7 @@ export default function NewTaskModal({ onClose, onCreated }) {
             type="submit"
             className="w-full bg-primary text-on-primary-container font-bold py-3 rounded-xl hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] transition-all mt-2"
           >
-            Create Task
+            {isEdit ? "Update Task" : "Create Task"}
           </button>
         </form>
       </div>

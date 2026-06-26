@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 
 export default function Upcoming() {
   const [tasks, setTasks] = useState([]);
+  const [editTask, setEditTask] = useState(null);
   const { query } = useSearch();
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
@@ -85,6 +86,8 @@ export default function Upcoming() {
     return "Later";
   };
 
+  const openEditModal = (task) => setEditTask(task);
+
   const deleteTask = async (id) => {
     try {
       await api.delete(`/tasks/${id}?user_email=${user.email}`);
@@ -96,7 +99,7 @@ export default function Upcoming() {
   };
 
   return (
-    <Layout title="Upcoming Schedule" onTaskCreated={fetchTasks}>
+    <Layout title="Upcoming Schedule" onTaskCreated={fetchTasks} editTask={editTask} onEditClose={() => setEditTask(null)}>
       <div className="px-4 md:px-gutter-desktop py-6 md:py-10 max-w-7xl mx-auto">
         {/* Timeline */}
         <div className="relative space-y-16">
@@ -144,6 +147,9 @@ export default function Upcoming() {
                         </div>
                         <div className="flex items-center gap-3">
                           <span className={`px-4 py-1.5 rounded-full ${cfg.bg} ${cfg.text} text-label-sm font-bold uppercase tracking-wider`}>{cfg.label}</span>
+                          <button onClick={() => openEditModal(task)} className="w-10 h-10 glass rounded-full flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors" title="Edit">
+                            <span className="material-symbols-outlined">edit</span>
+                          </button>
                           <button onClick={() => deleteTask(task.id)} className="w-10 h-10 glass rounded-full flex items-center justify-center text-on-surface-variant hover:text-error transition-colors">
                             <span className="material-symbols-outlined">delete</span>
                           </button>

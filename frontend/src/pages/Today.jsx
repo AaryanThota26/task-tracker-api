@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 
 export default function Today() {
   const [tasks, setTasks] = useState([]);
+  const [editTask, setEditTask] = useState(null);
   const { query } = useSearch();
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
@@ -72,6 +73,8 @@ export default function Today() {
     }
   };
 
+  const openEditModal = (task) => setEditTask(task);
+
   const deleteTask = async (id) => {
     try {
       await api.delete(`/tasks/${id}?user_email=${user.email}`);
@@ -91,7 +94,7 @@ export default function Today() {
   };
 
   return (
-    <Layout title="Today's Tasks" onTaskCreated={fetchTasks}>
+    <Layout title="Today's Tasks" onTaskCreated={fetchTasks} editTask={editTask} onEditClose={() => setEditTask(null)}>
       <div className="flex-1 flex flex-col lg:flex-row p-4 md:p-gutter-desktop gap-card-gap">
         {/* Left: Task List */}
         <section className="flex-[3] flex flex-col min-w-0">
@@ -134,6 +137,9 @@ export default function Today() {
                             <span className="material-symbols-outlined text-primary">play_arrow</span>
                           </button>
                         )}
+                        <button onClick={() => openEditModal(task)} className="p-2 rounded-full hover:bg-white/5 text-on-surface-variant" title="Edit">
+                          <span className="material-symbols-outlined">edit</span>
+                        </button>
                         <button onClick={() => deleteTask(task.id)} className="p-2 rounded-full hover:bg-white/5 text-on-surface-variant" title="Delete">
                           <span className="material-symbols-outlined text-error">delete</span>
                         </button>

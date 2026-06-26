@@ -1,6 +1,6 @@
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useTransition } from "react";
 import NewTaskModal from "./NewTaskModal";
 
 function useWindowWidth() {
@@ -13,8 +13,21 @@ function useWindowWidth() {
   return width;
 }
 
-export default function Layout({ children, title, onTaskCreated }) {
+export default function Layout({
+  children,
+  title,
+  onTaskCreated,
+  editTask = null,
+  onEditClose,
+}) {
   const [showModal, setShowModal] = useState(false);
+
+  const [, startTransition] = useTransition();
+  useEffect(() => {
+    if (editTask) {
+      startTransition(() => setShowModal(true));
+    }
+  }, [editTask]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const width = useWindowWidth();
   const isMobile = width < 768;
@@ -24,7 +37,10 @@ export default function Layout({ children, title, onTaskCreated }) {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar
-        onNewTask={() => setShowModal(true)}
+        onNewTask={() => {
+          if (editTask && onEditClose) onEditClose();
+          setShowModal(true);
+        }}
         mobileOpen={mobileOpen}
         setMobileOpen={setMobileOpen}
         isMobile={isMobile}
@@ -44,8 +60,13 @@ export default function Layout({ children, title, onTaskCreated }) {
       </main>
       {showModal && (
         <NewTaskModal
-          onClose={() => setShowModal(false)}
+          task={editTask}
+          onClose={() => {
+            if (editTask && onEditClose) onEditClose();
+            setShowModal(false);
+          }}
           onCreated={() => {
+            if (editTask && onEditClose) onEditClose();
             setShowModal(false);
             if (onTaskCreated) onTaskCreated();
           }}

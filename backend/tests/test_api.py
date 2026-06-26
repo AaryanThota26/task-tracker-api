@@ -209,6 +209,79 @@ def test_update_task_not_found(client):
     assert response.json()["detail"] == "Task not found"
 
 
+def test_update_task_due_date(client):
+    """PUT /api/tasks/{id} should add a due_date to a task created without one."""
+    create_resp = client.post("/api/tasks", json={
+        "task": "No due date",
+        "user_email": "u@example.com",
+    })
+    task_id = create_resp.json()["id"]
+
+    response = client.put(f"/api/tasks/{task_id}", json={
+        "due_date": "2025-12-01T10:00:00",
+        "user_email": "u@example.com",
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["message"] == "Task updated"
+    assert data["task"]["due_date"] == "2025-12-01T10:00:00+00:00"
+
+
+def test_update_task_partial(client):
+    """PUT /api/tasks/{id} with only the title should preserve other fields."""
+    create_resp = client.post("/api/tasks", json={
+        "task": "Original title",
+        "description": "Original description",
+        "user_email": "u@example.com",
+        "status": "doing",
+        "priority": "high",
+    })
+    task_id = create_resp.json()["id"]
+
+    response = client.put(f"/api/tasks/{task_id}", json={
+        "task": "New title",
+        "user_email": "u@example.com",
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["message"] == "Task updated"
+    assert data["task"]["task"] == "New title"
+    assert data["task"]["description"] == "Original description"
+    assert data["task"]["status"] == "doing"
+    assert data["task"]["priority"] == "high"
+
+
+def test_update_task_wrong_user(client):
+    """PUT /api/tasks/{id} for a task owned by another user should return 404."""
+    create_resp = client.post("/api/tasks", json={
+        "task": "Alice task",
+        "user_email": "alice@example.com",
+    })
+    task_id = create_resp.json()["id"]
+
+    response = client.put(f"/api/tasks/{task_id}", json={
+        "task": "Hacked title",
+        "user_email": "bob@example.com",
+    })
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Task not found"
+
+
+def test_update_task_invalid_due_date(client):
+    """PUT /api/tasks/{id} with a malformed due_date should return a 422 validation error."""
+    create_resp = client.post("/api/tasks", json={
+        "task": "Due date test",
+        "user_email": "u@example.com",
+    })
+    task_id = create_resp.json()["id"]
+
+    response = client.put(f"/api/tasks/{task_id}", json={
+        "due_date": "not-a-datetime",
+        "user_email": "u@example.com",
+    })
+    assert response.status_code == 422
+
+
 # ---------------------------------------------------------------------------
 # DELETE
 # ---------------------------------------------------------------------------

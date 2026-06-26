@@ -47,6 +47,7 @@ export default function Dashboard() {
   const [newTaskName, setNewTaskName] = useState("");
   const [newTaskDate, setNewTaskDate] = useState("");
   const [newTaskTime, setNewTaskTime] = useState("");
+  const [editTask, setEditTask] = useState(null);
   const { query } = useSearch();
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const navigate = useNavigate();
@@ -117,6 +118,8 @@ export default function Dashboard() {
     }
   };
 
+  const openEditModal = (task) => setEditTask(task);
+
   const greeting = () => {
     const h = new Date().getHours();
     if (h < 12) return "Good morning";
@@ -147,7 +150,7 @@ export default function Dashboard() {
     .slice(0, 6);
 
   return (
-    <Layout title="Task Tracker" onTaskCreated={fetchTasks}>
+    <Layout title="Task Tracker" onTaskCreated={fetchTasks} editTask={editTask} onEditClose={() => setEditTask(null)}>
       <div className="px-4 md:px-gutter-desktop py-6 md:py-10 max-w-7xl mx-auto w-full space-y-6 md:space-y-10 animate-in">
         {/* Greeting */}
         <section className="glass rounded-[2rem] p-6 md:p-10 relative overflow-hidden">
@@ -197,6 +200,12 @@ export default function Dashboard() {
                         </span>
                       </div>
                     </div>
+                    <button
+                      onClick={() => openEditModal(task)}
+                      className="p-2 rounded-full hover:bg-white/5 text-on-surface-variant"
+                    >
+                      <span className="material-symbols-outlined">edit</span>
+                    </button>
                     <button
                       onClick={() => navigate("/today")}
                       className="p-2 rounded-full hover:bg-white/5 text-on-surface-variant"
@@ -284,6 +293,12 @@ export default function Dashboard() {
                       </span>
                     </div>
                   </div>
+                  <button
+                    onClick={() => openEditModal(task)}
+                    className="p-2 rounded-full hover:bg-white/5 text-on-surface-variant shrink-0"
+                  >
+                    <span className="material-symbols-outlined">edit</span>
+                  </button>
                   <button
                     onClick={() => navigate("/today")}
                     className="p-2 rounded-full hover:bg-white/5 text-on-surface-variant shrink-0"
