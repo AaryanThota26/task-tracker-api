@@ -2,30 +2,14 @@ import { useState, useEffect, useCallback } from "react";
 import api from "../services/api";
 import Layout from "../components/Layout";
 import toast from "react-hot-toast";
-
-const themes = [
-  { id: "blue", hex: "#1E40AF", on: "#ffffff" },
-  { id: "teal", hex: "#0D9488", on: "#ffffff" },
-  { id: "purple", hex: "#7C3AED", on: "#3c0091" },
-  { id: "orange", hex: "#EA580C", on: "#ffffff" },
-  { id: "green", hex: "#16A34A", on: "#ffffff" },
-];
-
-function hexToRgbA(hex, alpha = 1) {
-  const h = hex.replace("#", "");
-  const bigint = parseInt(h, 16);
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
-  return `rgb(${r} ${g} ${b} / ${alpha})`;
-}
+import { themes, getSavedTheme, applyThemeVariables } from "../lib/theme";
 
 export default function Accounts() {
   const [user, setUser] = useState(() =>
     JSON.parse(localStorage.getItem("user") || "null")
   );
   const [darkMode, setDarkMode] = useState(true);
-  const [theme, setTheme] = useState("purple");
+  const [theme, setTheme] = useState(getSavedTheme);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [taskCount, setTaskCount] = useState(0);
 
@@ -40,8 +24,6 @@ export default function Accounts() {
   const [pwError, setPwError] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    if (saved) applyTheme(saved);
     const dm = localStorage.getItem("darkMode");
     if (dm !== null) {
       const bool = dm === "true";
@@ -63,35 +45,9 @@ export default function Accounts() {
   }, [user?.email]);
 
   const applyTheme = (t) => {
-    const th = themes.find((th) => th.id === t) || themes[2];
+    applyThemeVariables(t);
     setTheme(t);
     localStorage.setItem("theme", t);
-    document.documentElement.style.setProperty("--accent", th.hex);
-    document.documentElement.style.setProperty("--on-accent", th.on);
-    document.documentElement.style.setProperty(
-      "--accent-container",
-      hexToRgbA(th.hex, 0.65)
-    );
-    document.documentElement.style.setProperty(
-      "--on-accent-container",
-      th.on === "#ffffff" ? "#1a1a2e" : "#340080"
-    );
-    document.documentElement.style.setProperty(
-      "--inverse-accent",
-      hexToRgbA(th.hex, 0.55)
-    );
-    document.documentElement.style.setProperty(
-      "--accent-fixed",
-      hexToRgbA(th.hex, 0.22)
-    );
-    document.documentElement.style.setProperty(
-      "--on-accent-fixed",
-      th.on === "#ffffff" ? "#e0e0ff" : "#23005c"
-    );
-    document.documentElement.style.setProperty(
-      "--on-accent-fixed-variant",
-      th.on === "#ffffff" ? "#c0c0ff" : "#5516be"
-    );
     toast.success("Theme updated");
   };
 

@@ -6,6 +6,9 @@ import { Toaster } from "react-hot-toast";
 
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { NotificationProvider } from "./context/NotificationContext";
+import { applyThemeVariables, getSavedTheme } from "./lib/theme";
+
+applyThemeVariables(getSavedTheme());
 
 ReactDOM.createRoot(document.getElementById("root")).render(
 <GoogleOAuthProvider
