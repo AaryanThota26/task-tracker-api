@@ -29,7 +29,7 @@ env:
   ARTIFACT_REGISTRY: us-central1-docker.pkg.dev/task-tracker-499005/task-tracker
   IMAGE_NAME: task-api
   GKE_CLUSTER: task-tracker-cluster
-  GKE_ZONE: us-central1
+  GKE_ZONE: asia-south1
   K8S_NAMESPACE: default
 
 jobs:
