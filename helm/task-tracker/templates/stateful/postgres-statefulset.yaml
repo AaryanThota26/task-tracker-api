@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "task-tracker.fullname" . }}-postgres
+  name: postgres
   labels:
     app: postgres
     {{- include "task-tracker.labels" . | nindent 4 }}
@@ -10,7 +10,7 @@ spec:
   selector:
     matchLabels:
       app: postgres
-  serviceName: {{ include "task-tracker.fullname" . }}-postgres-headless
+  serviceName: postgres-headless
   template:
     metadata:
       labels:
@@ -29,7 +29,7 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "task-tracker.fullname" . }}-secret
+              name: app-secret
               key: DB_PASSWORD
         resources:
           {{- toYaml .Values.postgres.resources | nindent 10 }}

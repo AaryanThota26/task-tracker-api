@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "task-tracker.fullname" . }}-frontend
+  name: frontend
   labels:
     app: frontend
     {{- include "task-tracker.labels" . | nindent 4 }}

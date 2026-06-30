@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ include "task-tracker.fullname" . }}-redis
+  name: redis
   labels:
     app: redis
     {{- include "task-tracker.labels" . | nindent 4 }}
@@ -10,7 +10,7 @@ spec:
   selector:
     matchLabels:
       app: redis
-  serviceName: {{ include "task-tracker.fullname" . }}-redis-headless
+  serviceName: redis-headless
   template:
     metadata:
       labels:

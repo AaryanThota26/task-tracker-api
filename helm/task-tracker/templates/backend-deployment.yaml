@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "task-tracker.fullname" . }}-backend
+  name: backend
   labels:
     app: backend
     {{- include "task-tracker.labels" . | nindent 4 }}
@@ -23,12 +23,12 @@ spec:
         - containerPort: {{ .Values.backend.service.port }}
         envFrom:
         - configMapRef:
-            name: {{ include "task-tracker.fullname" . }}-config
+            name: app-config
         env:
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ include "task-tracker.fullname" . }}-secret
+              name: app-secret
               key: DB_PASSWORD
         resources:
           {{- toYaml .Values.backend.resources | nindent 10 }}
