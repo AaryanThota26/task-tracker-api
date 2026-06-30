@@ -30,7 +30,7 @@ env:
   IMAGE_NAME: task-api
   GKE_CLUSTER: task-tracker-cluster
   GKE_ZONE: asia-south1
-  K8S_NAMESPACE: default
+  K8S_NAMESPACE: helm-demo
 
 jobs:
   build-and-deploy:
@@ -89,7 +89,20 @@ jobs:
           cluster_name: ${{ env.GKE_CLUSTER }}
           location: ${{ env.GKE_ZONE }}
 
-      - name: Update deployment image
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Lint Helm Chart
+        run: helm lint ./helm/task-tracker
+
+      - name: Deploy Backend with Helm
         run: |
-          kubectl set image deployment/backend backend="${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}" -n ${{ env.K8S_NAMESPACE }}
-          kubectl rollout status deployment/backend -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+          helm upgrade --install task-tracker ./helm/task-tracker \
+            --namespace ${{ env.K8S_NAMESPACE }} \
+            --create-namespace \
+            --set backend.image.repository=${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set backend.image.tag=${{ github.sha }}
+
+          kubectl rollout status deployment/backend \
+            -n ${{ env.K8S_NAMESPACE }} \
+            --timeout=300s
