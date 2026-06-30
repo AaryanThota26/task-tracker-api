@@ -1,3 +1,15 @@
+![Terraform](https://img.shields.io/badge/Terraform-IaC-blueviolet)
+
+![Docker](https://img.shields.io/badge/Docker-Containerized-blue)
+
+![Kubernetes](https://img.shields.io/badge/Kubernetes-GKE-326CE5)
+
+![Helm](https://img.shields.io/badge/Helm-Deployed-0F1689)
+
+![GitHub Actions](https://img.shields.io/badge/CI/CD-GitHub%20Actions-2088FF)
+
+![GCP](https://img.shields.io/badge/Cloud-Google%20Cloud-4285F4)
+
 # 🚀 Task Tracker - Cloud Native Application on Google Cloud Platform (GCP)
 
 ## Overview
@@ -23,11 +35,11 @@ The application allows users to authenticate using Google OAuth and perform CRUD
 
 ## Frontend
 
-https://taskmonitor.org
+[Frontend](https://taskmonitor.org)
 
 ## Swagger API Documentation
 
-https://taskmonitor.org/docs
+[Swagger API](https://taskmonitor.org/docs)
 
 ---
 
@@ -37,16 +49,20 @@ https://taskmonitor.org/docs
 * Implemented Infrastructure as Code (IaC) using Terraform
 * Containerized frontend and backend using Docker
 * Deployed workloads on Google Kubernetes Engine (GKE)
+* Packaged Kubernetes resources using Helm Charts
+* Automated CI/CD using GitHub Actions
+* Stored container images in Google Artifact Registry
 * Configured HTTPS using GKE Managed SSL Certificates
 * Implemented Google OAuth authentication
 * Managed PostgreSQL and Redis using Kubernetes StatefulSets
 * Configured Kubernetes Ingress with custom domain routing
 * Implemented Redis caching with automatic cache invalidation
-* Resolved production deployment, SSL, persistence, and timezone-related issues
+* Resolved production deployment, SSL, persistence, Helm migration, and timezone-related issues
+* Designed separate GitHub Actions workflows for backend and frontend with path-based triggers
 
 ---
 
-# 🏗️ Architecture
+# 🏗️ Application Architecture
 
 ```text
 User
@@ -81,6 +97,45 @@ GKE Ingress (GCE Ingress Controller)
  Persistent Volume           Persistent Volume
 ```
 
+
+# ⚙️ Deployment Pipeline Architecture
+
+```text
+Developer
+    │
+    ▼
+GitHub Repository
+    │
+    ▼
+GitHub Actions
+    │
+    ├──────────── Build Docker Images
+    │
+    ├──────────── Push Images
+    │               │
+    │               ▼
+    │        Artifact Registry
+    │
+    ├──────────── Helm Upgrade
+    │
+    ▼
+Google Kubernetes Engine
+    │
+    ├────────► Frontend Pods
+    │
+    ├────────► Backend Pods
+    │
+    ├────────► PostgreSQL StatefulSet
+    │
+    ├────────► Redis StatefulSet
+    │
+    ▼
+Ingress
+    │
+    ▼
+https://taskmonitor.org
+```
+
 ---
 
 # 🛠️ Tech Stack
@@ -104,15 +159,18 @@ GKE Ingress (GCE Ingress Controller)
 
 * Docker
 * Docker Compose
-* Kubernetes
-* Google Kubernetes Engine (GKE)
 * Terraform
+* Kubernetes
+* Helm
+* GitHub Actions
+* Google Kubernetes Engine (GKE)
 * Google Cloud Platform (GCP)
 * Artifact Registry
 * Managed SSL Certificates
 * Kubernetes Ingress
-* StatefulSets
 * Persistent Volumes
+* StatefulSets
+
 
 ---
 
@@ -162,6 +220,11 @@ GKE Ingress (GCE Ingress Controller)
 ```text
 task-tracker-api/
 │
+│
+├── .github/
+│  └── workflows/
+│      ├── backend.yml
+│      └── frontend.yml
 ├── backend/
 │   ├── main.py
 │   ├── database.py
@@ -205,7 +268,10 @@ task-tracker-api/
 │
 ├── helm/
 │   └── task-tracker/
-│
+│       ├── Chart.yaml
+│       ├── values.yaml
+│       ├── charts/
+│       └── templates/
 ├── docker-compose.yml
 ├── README.md
 └── .env.example
@@ -273,7 +339,7 @@ DELETE /api/tasks/{task_id}
 ## Clone Repository
 
 ```bash
-git clone https://github.com/<your-username>/task-tracker-api.git
+git clone https://github.com/AaryanThota26/task-tracker-api.git
 cd task-tracker-api
 ```
 
@@ -331,6 +397,73 @@ docker compose up -d
 
 ---
 
+# ☸️ Helm Deployment
+
+## Install Helm Release
+
+```bash
+helm install task-tracker ./helm/task-tracker
+```
+
+## Upgrade Release
+
+```bash
+helm upgrade task-tracker ./helm/task-tracker
+```
+
+## List Releases
+
+```bash
+helm list
+```
+
+## View Release
+
+```bash
+helm status task-tracker
+```
+
+## Rollback
+
+```bash
+helm rollback task-tracker <revision>
+```
+
+
+---
+
+# 6. Add a new section after Kubernetes Deployment
+
+# 🔄 GitHub Actions CI/CD
+
+```md
+The project includes two independent GitHub Actions workflows.
+
+### Backend Workflow
+
+- Triggered only when backend files change
+- Builds backend Docker image
+- Pushes image to Artifact Registry
+- Deploys using Helm
+- Waits for Kubernetes rollout
+
+### Frontend Workflow
+
+- Triggered only when frontend files change
+- Builds frontend Docker image
+- Pushes image to Artifact Registry
+- Deploys using Helm
+- Waits for Kubernetes rollout
+
+Both workflows use:
+
+- Workload Identity Federation
+- Google Artifact Registry
+- Google Kubernetes Engine
+- Helm
+```
+
+
 # ☸️ Kubernetes Deployment
 
 ## Deploy Resources
@@ -384,10 +517,11 @@ kubectl get managedcertificate
 The application is deployed on **Google Kubernetes Engine (GKE Autopilot)** using:
 
 * GKE Autopilot Cluster
-* Kubernetes Deployments
+* Helm Releases
 * Kubernetes StatefulSets
 * Kubernetes Services
 * Kubernetes Ingress
+* GitHub Actions
 * Google Cloud Load Balancer
 * Artifact Registry
 * Managed SSL Certificates
@@ -424,6 +558,22 @@ terraform apply
 ```bash
 terraform state list
 ```
+
+
+---
+# 📦 Artifact Registry
+```
+Docker images are automatically pushed to **Google Artifact Registry**.
+
+Repositories:
+
+- Backend → `task-api`
+- Frontend → `task-frontend`
+
+These images are deployed to Google Kubernetes Engine using Helm through GitHub Actions.
+```
+
+---
 
 ---
 
@@ -504,8 +654,7 @@ During development and deployment, the following production issues were identifi
 
 # 🔮 Future Improvements
 
-* GitHub Actions CI/CD Pipeline
-* Automated Kubernetes deployments
+
 * Cloud SQL integration
 * Google Memorystore integration
 * Horizontal Pod Autoscaler (HPA)
