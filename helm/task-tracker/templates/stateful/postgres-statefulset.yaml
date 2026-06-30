@@ -31,6 +31,8 @@ spec:
             secretKeyRef:
               name: app-secret
               key: DB_PASSWORD
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         resources:
           {{- toYaml .Values.postgres.resources | nindent 10 }}
         volumeMounts:
