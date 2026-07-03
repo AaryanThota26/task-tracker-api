@@ -113,6 +113,19 @@ jobs:
       - name: Lint Helm Chart
         run: helm lint ./helm/task-tracker
 
+      - name: Debug Helm values
+        run: |
+          echo "Release      : $RELEASE_NAME"
+          echo "Namespace    : $K8S_NAMESPACE"
+          echo "Values File  : $VALUES_FILE"
+          echo "Backend Repo : ${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          echo "Backend Tag  : ${{ github.sha }}"
+
+          helm template $RELEASE_NAME ./helm/task-tracker \
+            -f $VALUES_FILE \
+            --set backend.image.repository=${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set backend.image.tag=${{ github.sha }} | grep "image:"
+
       - name: Deploy Backend with Helm
         run: |
           helm upgrade --install $RELEASE_NAME ./helm/task-tracker \
