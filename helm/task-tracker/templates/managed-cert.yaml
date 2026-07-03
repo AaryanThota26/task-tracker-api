@@ -2,7 +2,7 @@
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
-  name: taskmonitor-cert
+  name: {{ include "task-tracker.fullname" . }}-cert
   labels:
     {{- include "task-tracker.labels" . | nindent 4 }}
 spec:

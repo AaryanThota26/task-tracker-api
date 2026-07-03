@@ -1,0 +1,96 @@
+# Default values for task-tracker.
+# This is a YAML-formatted file. Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+# ---------------------------------------------------------------------------
+# Backend (FastAPI)
+# ---------------------------------------------------------------------------
+backend:
+  replicas: 1
+  image:
+    repository: us-central1-docker.pkg.dev/task-tracker-499005/task-tracker/task-api
+    tag: v5
+    pullPolicy: Always
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+  service:
+    port: 8000
+
+# ---------------------------------------------------------------------------
+# Frontend (React/Vite)
+# ---------------------------------------------------------------------------
+frontend:
+  replicas: 1
+  image:
+    repository: us-central1-docker.pkg.dev/task-tracker-499005/task-tracker/task-frontend
+    tag: v13
+    pullPolicy: Always
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+  service:
+    port: 80
+    targetPort: 3000
+
+# ---------------------------------------------------------------------------
+# PostgreSQL (StatefulSet)
+# ---------------------------------------------------------------------------
+postgres:
+  image:
+    repository: postgres
+    tag: "17"
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 250m
+  storage:
+    size: 10Gi
+    accessMode: ReadWriteOnce
+  service:
+    port: 5432
+  database: taskdb
+  user: postgres
+
+# ---------------------------------------------------------------------------
+# Redis (StatefulSet)
+# ---------------------------------------------------------------------------
+redis:
+  image:
+    repository: redis
+    tag: "7"
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 100m
+  storage:
+    size: 5Gi
+    accessMode: ReadWriteOnce
+  service:
+    port: 6379
+
+# ---------------------------------------------------------------------------
+# Application Secret
+# ---------------------------------------------------------------------------
+secret:
+  dbPassword: "2048"
+
+# ---------------------------------------------------------------------------
+# Ingress
+# ---------------------------------------------------------------------------
+ingress:
+  enabled: true
+  class: gce
+  domains:
+    - sandbox.taskmonitor.org
+
+
+# ---------------------------------------------------------------------------
+# GKE Managed Certificate
+# ---------------------------------------------------------------------------
+managedCert:
+  enabled: true

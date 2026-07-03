@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
+  name: {{ include "task-tracker.fullname" . }}-backend
   labels:
-    app: backend
+    app: {{ include "task-tracker.fullname" . }}-backend
     {{- include "task-tracker.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.backend.replicas }}
   selector:
     matchLabels:
-      app: backend
+      app: {{ include "task-tracker.fullname" . }}-backend
   template:
     metadata:
       labels:
-        app: backend
+        app: {{ include "task-tracker.fullname" . }}-backend
     spec:
       containers:
       - name: backend
@@ -23,12 +23,12 @@ spec:
         - containerPort: {{ .Values.backend.service.port }}
         envFrom:
         - configMapRef:
-            name: app-config
+            name: {{ include "task-tracker.fullname" . }}-config
         env:
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: app-secret
+              name: {{ include "task-tracker.fullname" . }}-secret
               key: DB_PASSWORD
         resources:
           {{- toYaml .Values.backend.resources | nindent 10 }}

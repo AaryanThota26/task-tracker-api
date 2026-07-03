@@ -4,33 +4,40 @@ name: Backend CI/CD
 # TRIGGER CONDITIONS
 # ═══════════════════════════════════════════════════════════════════════════════
 # This workflow triggers ONLY when files under the backend/ directory change.
-# It will NOT run for frontend/, migrations/, or root-level config changes.
+#
+# main branch    -> Deploys to Production (helm-demo)
+# sandbox branch -> Deploys to Sandbox (sandbox)
 #
 # Examples:
-#   • backend/main.py changed          →  This workflow runs
-#   • frontend/src/App.jsx changed     →  This workflow does NOT run
-#   • migrations/versions/001.py added →  This workflow does NOT run
-#   • k8s/ingress.yaml changed         →  This workflow does NOT run
-#   • README.md changed                →  This workflow does NOT run
+#   • backend/main.py changed on main      → Deploy Production
+#   • backend/main.py changed on sandbox   → Deploy Sandbox
+#   • frontend/src/App.jsx changed         → This workflow does NOT run
+#   • migrations/versions/001.py added     → This workflow does NOT run
 # ═══════════════════════════════════════════════════════════════════════════════
+
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - sandbox
     paths:
       - 'backend/**'
+      - '.github/workflows/backend.yml'
+
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - sandbox
     paths:
       - 'backend/**'
+      - '.github/workflows/backend.yml'
 
 env:
   # Target GCP Artifact Registry repository
-  # Verified against k8s/backend-deployment.yaml image path
   ARTIFACT_REGISTRY: us-central1-docker.pkg.dev/task-tracker-499005/task-tracker
   IMAGE_NAME: task-api
   GKE_CLUSTER: task-tracker-cluster
   GKE_ZONE: asia-south1
-  K8S_NAMESPACE: helm-demo
 
 jobs:
   build-and-deploy:
@@ -38,7 +45,7 @@ jobs:
 
     permissions:
       contents: read
-      id-token: write  # Required for Google workload identity federation
+      id-token: write
 
     steps:
       # ───────────────────────────────────────────────────────────────────────
@@ -48,7 +55,22 @@ jobs:
         uses: actions/checkout@v4
 
       # ───────────────────────────────────────────────────────────────────────
-      # 2. Authenticate to Google Cloud
+      # 2. Select deployment environment based on branch
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Set deployment environment
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            echo "RELEASE_NAME=task-tracker" >> $GITHUB_ENV
+            echo "K8S_NAMESPACE=helm-demo" >> $GITHUB_ENV
+            echo "VALUES_FILE=helm/task-tracker/values-prod.yaml" >> $GITHUB_ENV
+          elif [ "${GITHUB_REF_NAME}" = "sandbox" ]; then
+            echo "RELEASE_NAME=task-tracker-sandbox" >> $GITHUB_ENV
+            echo "K8S_NAMESPACE=sandbox" >> $GITHUB_ENV
+            echo "VALUES_FILE=helm/task-tracker/values-sandbox.yaml" >> $GITHUB_ENV
+          fi
+
+      # ───────────────────────────────────────────────────────────────────────
+      # 3. Authenticate to Google Cloud
       # ───────────────────────────────────────────────────────────────────────
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -57,15 +79,16 @@ jobs:
           service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
       # ───────────────────────────────────────────────────────────────────────
-      # 3. Configure Docker for Artifact Registry
+      # 4. Configure Docker for Artifact Registry
       # ───────────────────────────────────────────────────────────────────────
       - name: Configure Docker
         uses: google-github-actions/setup-gcloud@v2
+
       - name: Configure Docker authentication
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
       # ───────────────────────────────────────────────────────────────────────
-      # 4. Build and push backend image
+      # 5. Build and push backend image
       # ───────────────────────────────────────────────────────────────────────
       - name: Build and push
         working-directory: backend
@@ -76,12 +99,7 @@ jobs:
           echo "Pushed $IMAGE_TAG"
 
       # ───────────────────────────────────────────────────────────────────────
-      # 5. Set up kubectl and deploy to GKE
-      # ───────────────────────────────────────────────────────────────────────
-      # ⚠️  NOTE: A Helm chart also exists in helm/task-tracker/.
-      #    If Helm is the actual deployment mechanism, replace the steps below
-      #    with: helm upgrade task-tracker ./helm/task-tracker --set backend.image.tag=<sha>
-      #    The deployment name used here ("backend") matches k8s/backend-deployment.yaml.
+      # 6. Set up kubectl and deploy to GKE
       # ───────────────────────────────────────────────────────────────────────
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v2
@@ -97,12 +115,13 @@ jobs:
 
       - name: Deploy Backend with Helm
         run: |
-          helm upgrade --install task-tracker ./helm/task-tracker \
-            --namespace ${{ env.K8S_NAMESPACE }} \
+          helm upgrade --install $RELEASE_NAME ./helm/task-tracker \
+            --namespace $K8S_NAMESPACE \
             --create-namespace \
+            -f $VALUES_FILE \
             --set backend.image.repository=${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set backend.image.tag=${{ github.sha }}
 
-          kubectl rollout status deployment/backend \
-            -n ${{ env.K8S_NAMESPACE }} \
+          kubectl rollout status deployment/${RELEASE_NAME}-backend \
+            -n $K8S_NAMESPACE \
             --timeout=300s

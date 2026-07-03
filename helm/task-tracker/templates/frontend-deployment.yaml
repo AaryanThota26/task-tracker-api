@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: frontend
+  name: {{ include "task-tracker.fullname" . }}-frontend
   labels:
-    app: frontend
+    app: {{ include "task-tracker.fullname" . }}-frontend
     {{- include "task-tracker.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.frontend.replicas }}
   selector:
     matchLabels:
-      app: frontend
+      app: {{ include "task-tracker.fullname" . }}-frontend
   template:
     metadata:
       labels:
-        app: frontend
+        app: {{ include "task-tracker.fullname" . }}-frontend
     spec:
       containers:
       - name: frontend
