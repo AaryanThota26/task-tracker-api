@@ -126,6 +126,29 @@ jobs:
             --set backend.image.repository=${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }} \
             --set backend.image.tag=${{ github.sha }} | grep "image:"
 
+      # ───────────────────────────────────────────────────────────────────────
+      # 7. Fetch currently deployed frontend image tag to preserve it
+      #    This prevents resetting the frontend tag when deploying backend changes
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Get current frontend image tag
+        id: get-frontend-tag
+        run: |
+          # Try to get the currently deployed frontend tag from the Helm release
+          CURRENT_FRONTEND_TAG=$(helm get values $RELEASE_NAME -n $K8S_NAMESPACE -o json 2>/dev/null | jq -r '.frontend.image.tag // empty')
+          
+          # If no release exists or tag not set, fall back to values file default
+          if [ -z "$CURRENT_FRONTEND_TAG" ]; then
+            CURRENT_FRONTEND_TAG=$(helm template $RELEASE_NAME ./helm/task-tracker -f $VALUES_FILE 2>/dev/null | grep -A1 'frontend:' | grep 'tag:' | awk '{print $2}' | head -1 | tr -d '"')
+          fi
+          
+          # Default fallback if everything fails
+          if [ -z "$CURRENT_FRONTEND_TAG" ]; then
+            CURRENT_FRONTEND_TAG="v13"
+          fi
+          
+          echo "CURRENT_FRONTEND_TAG=$CURRENT_FRONTEND_TAG" >> $GITHUB_OUTPUT
+          echo "Preserving frontend image tag: $CURRENT_FRONTEND_TAG"
+
       - name: Deploy Backend with Helm
         run: |
           helm upgrade --install $RELEASE_NAME ./helm/task-tracker \
@@ -133,7 +156,8 @@ jobs:
             --create-namespace \
             -f $VALUES_FILE \
             --set backend.image.repository=${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }} \
-            --set backend.image.tag=${{ github.sha }}
+            --set backend.image.tag=${{ github.sha }} \
+            --set frontend.image.tag=${{ steps.get-frontend-tag.outputs.CURRENT_FRONTEND_TAG }}
 
           kubectl rollout status deployment/${RELEASE_NAME}-backend \
             -n $K8S_NAMESPACE \
