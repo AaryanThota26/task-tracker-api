@@ -43,6 +43,32 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
+    # ───────────────────────────────────────────────────────────────────────
+    # Concurrency: serialize deployments to the SAME Helm release.
+    #
+    # Both backend.yml and frontend.yml run `helm upgrade --install
+    # $RELEASE_NAME` against the same release (task-tracker / task-tracker-
+    # sandbox). When two runs target the same release concurrently, Helm
+    # rejects the second with:
+    #   UPGRADE FAILED: another operation (install/upgrade/rollback)
+    #                   is in progress
+    #
+    # The group key mirrors the release-name mapping in the deploy step:
+    #   push           → github.ref_name   (main | sandbox)
+    #   pull_request   → github.head_ref   (PR source branch)
+    # so any two runs targeting the same release share one queue, while
+    # backend.yml and frontend.yml remain independent files/jobs.
+    #
+    # cancel-in-progress: false — never kill an in-flight Helm upgrade.
+    # Aborting mid-upgrade can leave the release in a half-applied state
+    # and recreate exactly the lock we are avoiding. Instead, queue the
+    # newer run; it will execute with the latest commit once the current
+    # run completes cleanly.
+    # ───────────────────────────────────────────────────────────────────────
+    concurrency:
+      group: helm-deploy-${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
+      cancel-in-progress: false
+
     permissions:
       contents: read
       id-token: write
