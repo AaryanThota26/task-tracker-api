@@ -115,6 +115,41 @@ jobs:
 
       - name: Lint Helm Chart
         run: helm lint ./helm/task-tracker
+      - name: Debug Helm values
+        run: |
+          echo "Release      : $RELEASE_NAME"
+          echo "Namespace    : $K8S_NAMESPACE"
+          echo "Values File  : $VALUES_FILE"
+          echo "Frontend Repo: ${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }}"
+          echo "Frontend Tag : ${{ github.sha }}"
+
+          helm template $RELEASE_NAME ./helm/task-tracker \
+            -f $VALUES_FILE \
+            --set frontend.image.repository=${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }} \
+            --set frontend.image.tag=${{ github.sha }} | grep "image:"
+
+      # ───────────────────────────────────────────────────────────────────────
+      # 7. Fetch currently deployed backend image tag to preserve it
+      #    This prevents resetting the backend tag when deploying frontend changes
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Get current backend image tag
+        id: get-backend-tag
+        run: |
+          # Try to get the currently deployed backend tag from the Helm release
+          CURRENT_BACKEND_TAG=$(helm get values $RELEASE_NAME -n $K8S_NAMESPACE -o json 2>/dev/null | jq -r '.backend.image.tag // empty')
+          
+          # If no release exists or tag not set, fall back to values file default
+          if [ -z "$CURRENT_BACKEND_TAG" ]; then
+            CURRENT_BACKEND_TAG=$(helm template $RELEASE_NAME ./helm/task-tracker -f $VALUES_FILE 2>/dev/null | grep -A1 'backend:' | grep 'tag:' | awk '{print $2}' | head -1 | tr -d '"')
+          fi
+          
+          # Default fallback if everything fails
+          if [ -z "$CURRENT_BACKEND_TAG" ]; then
+            CURRENT_BACKEND_TAG="v5"
+          fi
+          
+          echo "CURRENT_BACKEND_TAG=$CURRENT_BACKEND_TAG" >> $GITHUB_OUTPUT
+          echo "Preserving backend image tag: $CURRENT_BACKEND_TAG"
 
       - name: Deploy Frontend with Helm
         run: |
@@ -123,7 +158,8 @@ jobs:
             --create-namespace \
             -f $VALUES_FILE \
             --set frontend.image.repository=${{ env.ARTIFACT_REGISTRY }}/${{ env.IMAGE_NAME }} \
-            --set frontend.image.tag=${{ github.sha }}
+            --set frontend.image.tag=${{ github.sha }} \
+            --set backend.image.tag=${{ steps.get-backend-tag.outputs.CURRENT_BACKEND_TAG }}
 
           kubectl rollout status deployment/${RELEASE_NAME}-frontend \
             -n $K8S_NAMESPACE \
