@@ -59,14 +59,21 @@ jobs:
       # ───────────────────────────────────────────────────────────────────────
       - name: Set deployment environment
         run: |
-          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+
+          echo "Branch: $BRANCH"
+
+          if [ "$BRANCH" = "main" ]; then
             echo "RELEASE_NAME=task-tracker" >> $GITHUB_ENV
             echo "K8S_NAMESPACE=helm-demo" >> $GITHUB_ENV
             echo "VALUES_FILE=helm/task-tracker/values-prod.yaml" >> $GITHUB_ENV
-          elif [ "${GITHUB_REF_NAME}" = "sandbox" ]; then
+          elif [ "$BRANCH" = "sandbox" ]; then
             echo "RELEASE_NAME=task-tracker-sandbox" >> $GITHUB_ENV
             echo "K8S_NAMESPACE=sandbox" >> $GITHUB_ENV
             echo "VALUES_FILE=helm/task-tracker/values-sandbox.yaml" >> $GITHUB_ENV
+          else
+            echo "Unknown branch: $BRANCH"
+            exit 1
           fi
 
       # ───────────────────────────────────────────────────────────────────────
