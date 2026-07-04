@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: frontend
+  name: {{ include "task-tracker.fullname" . }}-frontend
   labels:
-    app: frontend
+    app: {{ include "task-tracker.fullname" . }}-frontend
     {{- include "task-tracker.labels" . | nindent 4 }}
 spec:
   type: ClusterIP
   selector:
-    app: frontend
+    app: {{ include "task-tracker.fullname" . }}-frontend
   ports:
   - port: {{ .Values.frontend.service.port }}
     targetPort: {{ .Values.frontend.service.targetPort }}

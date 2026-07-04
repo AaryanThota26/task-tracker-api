@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: redis-headless
+  name: {{ include "task-tracker.fullname" . }}-redis-headless
   labels:
-    app: redis
+    app: {{ include "task-tracker.fullname" . }}-redis
     {{- include "task-tracker.labels" . | nindent 4 }}
 spec:
   clusterIP: None
   selector:
-    app: redis
+    app: {{ include "task-tracker.fullname" . }}-redis
   ports:
   - port: {{ .Values.redis.service.port }}
     targetPort: {{ .Values.redis.service.port }}

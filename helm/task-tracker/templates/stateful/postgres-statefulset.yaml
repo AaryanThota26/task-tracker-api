@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: postgres
+  name: {{ include "task-tracker.fullname" . }}-postgres
   labels:
-    app: postgres
+    app: {{ include "task-tracker.fullname" . }}-postgres
     {{- include "task-tracker.labels" . | nindent 4 }}
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
-  serviceName: postgres-headless
+      app: {{ include "task-tracker.fullname" . }}-postgres
+  serviceName: {{ include "task-tracker.fullname" . }}-postgres-headless
   template:
     metadata:
       labels:
-        app: postgres
+        app: {{ include "task-tracker.fullname" . }}-postgres
     spec:
       containers:
       - name: postgres
@@ -29,7 +29,7 @@ spec:
         - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: app-secret
+              name: {{ include "task-tracker.fullname" . }}-secret
               key: DB_PASSWORD
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
