@@ -143,8 +143,24 @@ jobs:
 
           echo "Migration Job: $JOB"
 
-          kubectl wait \
+          if ! kubectl wait \
             --for=condition=complete \
             job/$JOB \
             -n $NAMESPACE \
-            --timeout=300s
+            --timeout=300s; then
+
+            echo "===== Job Description ====="
+            kubectl describe job $JOB -n $NAMESPACE
+
+            echo "===== Pods ====="
+            kubectl get pods -n $NAMESPACE
+
+            POD=$(kubectl get pods -n $NAMESPACE \
+              --selector=job-name=$JOB \
+              -o jsonpath="{.items[0].metadata.name}")
+
+            echo "===== Pod Logs ====="
+              kubectl logs $POD -n $NAMESPACE
+
+            exit 1
+          fi
