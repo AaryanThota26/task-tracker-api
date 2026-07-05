@@ -1,0 +1,49 @@
+{{- if .Values.migration.enabled }}
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "task-tracker.fullname" . }}-migration-{{ now | unixEpoch }}
+  labels:
+    app: {{ include "task-tracker.fullname" . }}-migration
+    job-type: migration
+    {{- include "task-tracker.labels" . | nindent 4 }}
+
+
+spec:
+  backoffLimit: 3
+
+  template:
+    metadata:
+      labels:
+        app: {{ include "task-tracker.fullname" . }}-migration
+        job-type: migration
+
+    spec:
+      restartPolicy: Never
+
+      containers:
+      - name: migration
+
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+
+        command:
+          - sh
+          - -c
+          - |
+              cd /app
+              alembic upgrade head
+
+        envFrom:
+        - configMapRef:
+            name: {{ include "task-tracker.fullname" . }}-config
+
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "task-tracker.fullname" . }}-secret
+              key: DB_PASSWORD
+{{- end }}
