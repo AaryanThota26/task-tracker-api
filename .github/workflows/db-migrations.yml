@@ -54,12 +54,23 @@ jobs:
       # ───────────────────────────────────────────────────────────────────────
       - name: Set deployment environment
         run: |
-          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH="${{ github.base_ref }}"
+          else
+            BRANCH="${GITHUB_REF_NAME}"
+          fi
+
+          echo "Branch: $BRANCH"
+
+          if [ "$BRANCH" = "main" ]; then
             echo "ENVIRONMENT=Production" >> $GITHUB_ENV
             echo "NAMESPACE=helm-demo" >> $GITHUB_ENV
-          elif [ "${GITHUB_REF_NAME}" = "sandbox" ]; then
+          elif [ "$BRANCH" = "sandbox" ]; then
             echo "ENVIRONMENT=Sandbox" >> $GITHUB_ENV
             echo "NAMESPACE=sandbox" >> $GITHUB_ENV
+          else
+            echo "Unknown branch: $BRANCH"
+            exit 1
           fi
 
       # ───────────────────────────────────────────────────────────────────────
