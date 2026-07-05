@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, Enum
+from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.sql import func
 from database import Base
 import enum
 
@@ -23,3 +24,9 @@ class TaskDB(Base):
     status = Column(String, default=TaskStatus.pending.value, nullable=False)
     priority = Column(String, default=TaskPriority.medium.value, nullable=False)
     due_date = Column(DateTime, nullable=True)
+
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now(),
+    )

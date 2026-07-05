@@ -1,0 +1,58 @@
+{{- if .Values.migration.enabled }}
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "task-tracker.fullname" . }}-migration
+  labels:
+    app: {{ include "task-tracker.fullname" . }}-migration
+    job-type: migration
+    {{- include "task-tracker.labels" . | nindent 4 }}
+  annotations:
+    # Run this Job as a pre-upgrade Helm hook — it executes before any
+    # other resource in the release is applied, ensuring the database is
+    # migrated before the new backend deployment rolls out.
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    # Delete the previous hook Job (same name) before creating a new one.
+    # This makes repeated `helm upgrade` runs idempotent: old Jobs from
+    # prior revisions are cleaned up before the new Job is created.
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  # Fail fast — a database migration that fails on the first attempt is
+  # unlikely to succeed on a retry. Manual intervention is required.
+  backoffLimit: 1
+  # Automatically clean up completed Jobs after 5 minutes. This is a
+  # Kubernetes-native safety net in case the hook-delete-policy does not
+  # fire (e.g. Helm version differences).
+  ttlSecondsAfterFinished: 300
+  template:
+    metadata:
+      labels:
+        app: {{ include "task-tracker.fullname" . }}-migration
+        job-type: migration
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: migration
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+        command:
+          - sh
+          - -c
+          - |
+            set -euo pipefail
+            echo "Running Alembic migration upgrade..."
+            cd /app
+            alembic upgrade head
+            echo "Migration completed successfully."
+        envFrom:
+        - configMapRef:
+            name: {{ include "task-tracker.fullname" . }}-config
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "task-tracker.fullname" . }}-secret
+              key: DB_PASSWORD
+{{- end }}
