@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, Query, HTTPException
 from schemas import TaskCreate, TaskUpdate, TaskResponse
-from database import SessionLocal, Base, engine
+from database import SessionLocal
 from models import TaskDB
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,8 +23,6 @@ def get_db():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Wait for DB to be reachable before creating tables
-    Base.metadata.create_all(bind=engine)
     yield
 
 app = FastAPI(lifespan=lifespan)
@@ -50,7 +48,16 @@ def task_to_dict(task):
         "user_email": task.user_email,
         "status": task.status,
         "priority": task.priority,
-        "due_date": task.due_date.replace(tzinfo=timezone.utc).isoformat() if task.due_date else None,
+        "due_date": (
+            task.due_date.replace(tzinfo=timezone.utc).isoformat()
+            if task.due_date
+            else None
+        ),
+        "created_at": (
+            task.created_at.isoformat()
+            if task.created_at
+            else None
+        ),
     }
 
 @router.get("/tasks")

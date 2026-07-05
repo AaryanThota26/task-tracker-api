@@ -39,6 +39,7 @@ class TaskResponse(BaseModel):
     status: str
     priority: str
     due_date: Optional[datetime] = None
+    created_at: datetime
 
     class Config:
         from_attributes = True

@@ -3,16 +3,23 @@ name: Database Migrations
 # ═══════════════════════════════════════════════════════════════════════════════
 # TRIGGER CONDITIONS
 # ═══════════════════════════════════════════════════════════════════════════════
-# This workflow triggers ONLY when files under the migrations/ directory change.
-# It is intentionally a SCAFFOLD / PLACEHOLDER — no actual migration command is
-# executed yet because the project does not currently have a migration framework
-# installed.
+# This workflow runs when Alembic migration files or related backend migration
+# configuration changes. It authenticates to GCP, connects to the GKE cluster,
+# and executes the database migration using a Helm pre-upgrade hook.
 #
+# The migration Job runs as a Helm pre-upgrade hook (before the backend
+# deployment upgrade), ensuring:
+#   1. The database is migrated before the new backend pods start.
+#   2. The migration completes before the backend image is rolled out.
+#   3. Old completed Jobs are cleaned up automatically.
+#   4. Repeated runs are idempotent (same Job name, hook cleanup).
+# ═══════════════════════════════════════════════════════════════════════════════
+
 # Examples:
-#   • migrations/versions/001_init.py added  →  This workflow runs (no-op)
-#   • backend/main.py changed                →  This workflow does NOT run
-#   • frontend/src/App.jsx changed           →  This workflow does NOT run
-#   • k8s/ingress.yaml changed               →  This workflow does NOT run
+#   • backend/alembic/versions/001_init.py changed → This workflow runs
+#   • backend/models.py changed                    → This workflow runs
+#   • backend/main.py changed                      → This workflow does NOT run
+#   • frontend/src/App.jsx changed                 → This workflow does NOT run
 # ═══════════════════════════════════════════════════════════════════════════════
 
 on:
@@ -21,7 +28,10 @@ on:
       - main
       - sandbox
     paths:
-      - 'migrations/**'
+      - 'backend/alembic/**'
+      - 'backend/alembic.ini'
+      - 'backend/models.py'
+      - 'backend/requirements.txt'
       - '.github/workflows/db-migrations.yml'
 
   pull_request:
@@ -29,12 +39,19 @@ on:
       - main
       - sandbox
     paths:
-      - 'migrations/**'
+      - 'backend/alembic/**'
+      - 'backend/alembic.ini'
+      - 'backend/models.py'
+      - 'backend/requirements.txt'
       - '.github/workflows/db-migrations.yml'
 
 jobs:
   migrate:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       # ───────────────────────────────────────────────────────────────────────
@@ -47,69 +64,114 @@ jobs:
       # 2. Determine target environment
       # ───────────────────────────────────────────────────────────────────────
       - name: Set deployment environment
+        id: env
         run: |
-          if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            echo "ENVIRONMENT=Production" >> $GITHUB_ENV
-            echo "NAMESPACE=helm-demo" >> $GITHUB_ENV
-          elif [ "${GITHUB_REF_NAME}" = "sandbox" ]; then
-            echo "ENVIRONMENT=Sandbox" >> $GITHUB_ENV
-            echo "NAMESPACE=sandbox" >> $GITHUB_ENV
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH="${{ github.base_ref }}"
+          else
+            BRANCH="${GITHUB_REF_NAME}"
+          fi
+
+          echo "Branch: $BRANCH"
+
+          if [ "$BRANCH" = "main" ]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+            echo "namespace=helm-demo" >> $GITHUB_OUTPUT
+            echo "release_name=task-tracker" >> $GITHUB_OUTPUT
+            echo "values_file=helm/task-tracker/values-prod.yaml" >> $GITHUB_OUTPUT
+          elif [ "$BRANCH" = "sandbox" ]; then
+            echo "environment=sandbox" >> $GITHUB_OUTPUT
+            echo "namespace=sandbox" >> $GITHUB_OUTPUT
+            echo "release_name=task-tracker-sandbox" >> $GITHUB_OUTPUT
+            echo "values_file=helm/task-tracker/values-sandbox.yaml" >> $GITHUB_OUTPUT
+          else
+            echo "Unknown branch: $BRANCH"
+            exit 1
           fi
 
       # ───────────────────────────────────────────────────────────────────────
-      # 3. Placeholder step
+      # 3. Authenticate to Google Cloud
       # ───────────────────────────────────────────────────────────────────────
-      # FIXME: Replace this placeholder with a real migration step once
-      #        Alembic (or another migration tool) is configured.
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: task-tracker-cluster
+          location: asia-south1
+
       # ───────────────────────────────────────────────────────────────────────
-      - name: Migration placeholder
+      # 4. Install Helm
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      # ───────────────────────────────────────────────────────────────────────
+      # 5. Run migration — Helm pre-upgrade hook
+      #
+      # The migration Job is a Helm pre-upgrade hook. When `helm upgrade` runs
+      # with `--set migration.enabled=true`, Helm:
+      #   1. Renders the migration-job.yaml template.
+      #   2. Detects the `helm.sh/hook: pre-upgrade` annotation.
+      #   3. Deletes any previous migration Job with the same name
+      #      (via hook-delete-policy: before-hook-creation).
+      #   4. Creates the new migration Job.
+      #   5. Waits for the Job to complete (Helm hooks are synchronous).
+      #   6. If the Job succeeds, deletes it (via hook-delete-policy: hook-succeeded).
+      #   7. Proceeds to upgrade the backend deployment.
+      #
+      # The `helm upgrade` command itself blocks until the migration completes
+      # or fails. No separate `kubectl wait` is needed — the command's exit
+      # code is the success/failure signal.
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Run database migration
         run: |
-          echo "═════════════════════════════════════════════════════════════════"
-          echo "  DB MIGRATION WORKFLOW — PLACEHOLDER / SCAFFOLD"
-          echo "═════════════════════════════════════════════════════════════════"
-          echo ""
-          echo "Environment : $ENVIRONMENT"
-          echo "Namespace   : $NAMESPACE"
-          echo "Branch      : ${GITHUB_REF_NAME}"
-          echo ""
-          echo "This workflow fired because files under migrations/ were changed."
-          echo ""
-          echo "CURRENT STATUS: No-op. Nothing was executed."
-          echo ""
-          echo "REASON: The project does not currently have a migration framework"
-          echo "        such as Alembic installed or a migrations/ directory present."
-          echo "        The backend uses SQLAlchemy with auto-create on startup:"
-          echo "          Base.metadata.create_all(bind=engine)"
-          echo ""
-          echo "═════════════════════════════════════════════════════════════════"
-          echo "  MISSING ITEMS REQUIRED TO MAKE THIS WORKFLOW OPERATIONAL"
-          echo "═════════════════════════════════════════════════════════════════"
-          echo ""
-          echo "  1. Add 'alembic' to backend/requirements.txt"
-          echo ""
-          echo "  2. Run 'alembic init migrations' inside the backend/ directory"
-          echo "     (or at repo root, depending on project preference)."
-          echo ""
-          echo "  3. Commit the resulting files:"
-          echo "       • alembic.ini"
-          echo "       • migrations/env.py"
-          echo "       • migrations/script.py.mako"
-          echo "       • migrations/versions/  (directory)"
-          echo ""
-          echo "  4. Replace this placeholder step with an actual migration job:"
-          echo "       - Set up Python (actions/setup-python@v5)"
-          echo "       - Install backend dependencies (pip install -r requirements.txt)"
-          echo "       - Run: alembic upgrade head"
-          echo "     OR, if migrations run inside a Job pod:"
-          echo "       - Build a migrations image"
-          echo "       - kubectl apply -f k8s/migration-job.yaml"
-          echo ""
-          echo "  5. Provide DB connection credentials via GitHub Secrets, e.g.:"
-          echo "       • DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD"
-          echo "       • Or a single DATABASE_URL secret"
-          echo ""
-          echo "  6. (Optional) Add a health-check or verification step after migration"
-          echo "     to confirm schema version matches alembic revision."
-          echo ""
-          echo "═════════════════════════════════════════════════════════════════"
-          exit 0
+          helm upgrade --install \
+            "${{ steps.env.outputs.release_name }}" \
+            ./helm/task-tracker \
+            --namespace "${{ steps.env.outputs.namespace }}" \
+            --create-namespace \
+            -f "${{ steps.env.outputs.values_file }}" \
+            --set migration.enabled=true \
+            --set backend.image.tag="${{ github.sha }}" \
+            --wait \
+            --timeout 5m
+
+      # ───────────────────────────────────────────────────────────────────────
+      # 6. Verify migration completed
+      #
+      # `helm upgrade --wait` already blocks until the pre-upgrade hook
+      # completes. This step is a safety net: if the Job was deleted by the
+      # hook-succeeded policy before we could check, we verify via the
+      # backend rollout status instead.
+      # ───────────────────────────────────────────────────────────────────────
+      - name: Verify migration and backend rollout
+        run: |
+          # Determine the backend deployment name
+          if [ "${{ steps.env.outputs.namespace }}" = "helm-demo" ]; then
+            DEPLOYMENT="${{ steps.env.outputs.release_name }}-backend"
+          else
+            DEPLOYMENT="${{ steps.env.outputs.release_name }}-backend"
+          fi
+
+          echo "Verifying backend deployment: $DEPLOYMENT"
+
+          # Wait for the new backend deployment to complete its rollout.
+          # The migration ran as a pre-upgrade hook before the backend was
+          # updated, so the backend rollout uses the same image tag as the
+          # migration. This confirms the backend is running the migrated code.
+          kubectl rollout status \
+            "deployment/$DEPLOYMENT" \
+            -n "${{ steps.env.outputs.namespace }}" \
+            --timeout=300s
+
+          echo "Backend rollout complete — migration verified."
+
+

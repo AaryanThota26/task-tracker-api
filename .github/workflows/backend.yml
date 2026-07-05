@@ -85,7 +85,11 @@ jobs:
       # ───────────────────────────────────────────────────────────────────────
       - name: Set deployment environment
         run: |
-          BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BRANCH="${{ github.base_ref }}"
+          else
+             BRANCH="${GITHUB_REF_NAME}"
+          fi
 
           echo "Branch: $BRANCH"
 
