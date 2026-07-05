@@ -94,3 +94,11 @@ ingress:
 # ---------------------------------------------------------------------------
 managedCert:
   enabled: true
+
+# ---------------------------------------------------------------------------
+# Database Migration Job
+# ---------------------------------------------------------------------------
+migration:
+  # Disabled by default in sandbox — only enabled during the db-migrations
+  # workflow via `--set migration.enabled=true`.
+  enabled: false
