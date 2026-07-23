@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, Query, HTTPException
 from schemas import TaskCreate, TaskUpdate, TaskResponse
-from database import SessionLocal
+from database import SessionLocal, Base
 from models import TaskDB
 from sqlalchemy.orm import Session
 from fastapi.middleware.cors import CORSMiddleware
