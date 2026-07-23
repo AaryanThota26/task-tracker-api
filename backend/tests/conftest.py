@@ -75,6 +75,12 @@ class FakeRedis:
 
 redis_config.redis_client = FakeRedis()
 
+# Patch the reference inside main.py too — main.py does
+# "from redis_config import redis_client" which creates a local binding
+# that still points to the real Redis client.
+import main as _main_module
+_main_module.redis_client = redis_config.redis_client
+
 # ---------------------------------------------------------------------------
 # 6. Provide FastAPI TestClient via pytest fixture
 # ---------------------------------------------------------------------------
